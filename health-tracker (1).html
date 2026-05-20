@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Health Tracker">
+<title>Health Tracker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; font-size: 16px; }
+
+/* THEMES */
+.theme-colorful {
+  --bg: #f5f0ff; --card: #fff; --accent: #7c3aed; --accent2: #ec4899;
+  --text: #1e1b4b; --muted: #6b7280; --border: #e5e7eb;
+  --nav: #7c3aed; --nav-text: #fff;
+  --tag: #ede9fe; --tag-text: #6d28d9;
+  --good: #d1fae5; --good-text: #065f46;
+  --bad: #fee2e2; --bad-text: #991b1b;
+  --warn: #fef3c7; --warn-text: #92400e;
+  --input-bg: #f9f7ff;
+}
+.theme-clean {
+  --bg: #f9fafb; --card: #fff; --accent: #2563eb; --accent2: #dc2626;
+  --text: #111827; --muted: #6b7280; --border: #e5e7eb;
+  --nav: #1e293b; --nav-text: #fff;
+  --tag: #eff6ff; --tag-text: #1d4ed8;
+  --good: #d1fae5; --good-text: #065f46;
+  --bad: #fee2e2; --bad-text: #991b1b;
+  --warn: #fef3c7; --warn-text: #92400e;
+  --input-bg: #f9fafb;
+}
+
+body { background: var(--bg); color: var(--text); }
+
+.app { max-width: 480px; margin: 0 auto; padding-bottom: 80px; }
+
+/* TOP BAR */
+.topbar {
+  background: var(--nav); color: var(--nav-text);
+  padding: 14px 16px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar h1 { font-size: 18px; font-weight: 700; }
+.theme-btn {
+  background: rgba(255,255,255,0.2); border: none; color: var(--nav-text);
+  padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer;
+  font-weight: 500;
+}
+
+/* PROFILE BAR */
+.profile-bar {
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 10px 16px; display: flex; gap: 8px; align-items: center;
+  position: sticky; top: 49px; z-index: 99;
+}
+.profile-btn {
+  flex: 1; padding: 9px 8px; border-radius: 10px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--muted); font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.profile-btn.active { border-color: var(--accent); background: var(--tag); color: var(--accent); }
+.edit-names-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 4px 2px; }
+
+/* NAV */
+.nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: var(--card); border-top: 1px solid var(--border);
+  display: flex; z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  padding: 8px 4px; cursor: pointer; color: var(--muted);
+  font-size: 10px; gap: 2px; border: none; background: none;
+}
+.nav-item.active { color: var(--accent); }
+.nav-icon { font-size: 22px; line-height: 1; }
+
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* DATE HEADER */
+.date-header {
+  padding: 14px 16px 6px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.date-nav { display: flex; align-items: center; gap: 10px; }
+.date-nav-btn {
+  background: var(--tag); border: none; color: var(--accent);
+  width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+  font-size: 18px; display: flex; align-items: center; justify-content: center;
+}
+.date-display { font-size: 16px; font-weight: 700; }
+.add-btn {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 10px; padding: 8px 14px; font-size: 14px;
+  font-weight: 600; cursor: pointer;
+}
+
+/* CARDS */
+.card {
+  background: var(--card); border-radius: 14px;
+  border: 1px solid var(--border); padding: 16px; margin: 10px 16px;
+}
+.card-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+.section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); margin-bottom: 7px; margin-top: 12px;
+}
+.section-label:first-child { margin-top: 0; }
+
+/* MEAL SECTIONS */
+.meal-section {
+  background: var(--card); border-radius: 14px;
+  border: 1px solid var(--border); margin: 8px 16px; overflow: hidden;
+}
+.meal-header {
+  padding: 13px 16px; display: flex; justify-content: space-between;
+  align-items: center;
+}
+.meal-header-left { display: flex; align-items: center; gap: 8px; }
+.meal-emoji { font-size: 20px; }
+.meal-label { font-size: 15px; font-weight: 600; }
+.meal-count {
+  font-size: 12px; color: var(--tag-text);
+  background: var(--tag); padding: 3px 9px; border-radius: 10px; font-weight: 500;
+}
+.add-meal-btn {
+  background: var(--tag); color: var(--accent); border: none;
+  border-radius: 8px; padding: 6px 12px; font-size: 13px;
+  font-weight: 600; cursor: pointer;
+}
+.meal-entry { padding: 10px 16px; border-top: 1px solid var(--border); }
+.meal-entry-name { font-size: 14px; font-weight: 600; }
+.meal-entry-ingredients { font-size: 13px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.meal-entry-note { font-size: 12px; color: var(--muted); font-style: italic; margin-top: 3px; }
+.meal-entry-actions { display: flex; gap: 6px; margin-top: 8px; }
+.btn-sm {
+  padding: 4px 10px; font-size: 12px; border-radius: 7px;
+  border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer;
+}
+.btn-danger { border-color: #fca5a5; color: #dc2626; }
+
+/* SEVERITY */
+.sev-grid { display: flex; gap: 4px; flex-wrap: wrap; }
+.sev-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1.5px solid var(--border); background: transparent;
+  font-size: 12px; cursor: pointer; color: var(--muted); font-weight: 700;
+}
+.sev-btn.sel-low { background: #d1fae5; border-color: #6ee7b7; color: #065f46; }
+.sev-btn.sel-mid { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+.sev-btn.sel-high { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+
+/* CHIPS */
+.chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 6px 12px; border-radius: 20px; font-size: 13px;
+  border: 1.5px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-weight: 500;
+}
+.chip.sel { background: var(--bad); border-color: #fca5a5; color: var(--bad-text); }
+.chip.sel-period { background: #fce7f3; border-color: #f9a8d4; color: #9d174d; }
+.chip.sel-flow { background: var(--tag); border-color: var(--accent); color: var(--accent); }
+
+/* INPUTS */
+textarea, input[type=text], input[type=date], select {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; font-size: 14px; font-family: inherit;
+  background: var(--input-bg); color: var(--text); outline: none;
+  transition: border-color 0.15s;
+}
+textarea { resize: vertical; }
+textarea:focus, input[type=text]:focus, select:focus { border-color: var(--accent); }
+
+/* PERIOD TOGGLE */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.toggle-label { font-size: 14px; font-weight: 600; }
+.sw { position: relative; width: 46px; height: 26px; }
+.sw input { opacity: 0; width: 0; height: 0; }
+.sw-track {
+  position: absolute; inset: 0; background: var(--border);
+  border-radius: 26px; cursor: pointer; transition: 0.2s;
+}
+.sw input:checked + .sw-track { background: var(--accent2); }
+.sw-track:before {
+  content: ''; position: absolute; width: 20px; height: 20px;
+  left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: 0.2s;
+}
+.sw input:checked + .sw-track:before { transform: translateX(20px); }
+
+/* SAVE */
+.save-btn {
+  display: block; width: calc(100% - 32px); margin: 14px 16px;
+  background: var(--accent); color: #fff; border: none;
+  border-radius: 12px; padding: 15px; font-size: 16px;
+  font-weight: 700; cursor: pointer; transition: opacity 0.15s;
+}
+.save-btn:active { opacity: 0.85; }
+.save-btn.saved { background: #10b981; }
+
+/* HISTORY */
+.history-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+.history-date { font-size: 14px; font-weight: 700; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.htag { padding: 3px 9px; border-radius: 10px; font-size: 12px; background: var(--tag); color: var(--tag-text); font-weight: 500; }
+.htag.bad { background: var(--bad); color: var(--bad-text); }
+.htag.period { background: #fce7f3; color: #9d174d; }
+.sev-pill { padding: 3px 9px; border-radius: 10px; font-size: 12px; font-weight: 700; }
+.sev-pill.low { background: var(--good); color: var(--good-text); }
+.sev-pill.mid { background: var(--warn); color: var(--warn-text); }
+.sev-pill.high { background: var(--bad); color: var(--bad-text); }
+.history-note { font-size: 12px; color: var(--muted); margin-top: 5px; font-style: italic; }
+
+/* TRIGGERS */
+.trigger-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 0; border-bottom: 1px solid var(--border);
+}
+.trigger-name { font-size: 14px; font-weight: 600; }
+.trigger-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.tbar-wrap { width: 80px; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.tbar { height: 100%; background: var(--accent2); border-radius: 4px; }
+
+/* SHARE */
+.share-btn {
+  display: block; width: 100%; padding: 13px; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer; text-align: center;
+  margin-bottom: 10px;
+}
+.share-export { background: var(--tag); color: var(--accent); border: 1.5px solid var(--accent); }
+.share-import { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
+.msg { padding: 10px 12px; border-radius: 10px; font-size: 13px; margin-top: 10px; font-weight: 500; }
+.msg.ok { background: var(--good); color: var(--good-text); }
+.msg.err { background: var(--bad); color: var(--bad-text); }
+
+/* SETTINGS */
+.settings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 13px 0; border-bottom: 1px solid var(--border);
+}
+.settings-row:last-child { border-bottom: none; }
+.settings-lbl { font-size: 14px; font-weight: 500; }
+.settings-row input[type=text] { width: 140px; padding: 7px 10px; font-size: 13px; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 200; display: none; align-items: flex-end;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card); border-radius: 22px 22px 0 0;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0));
+  width: 100%; max-height: 88vh; overflow-y: auto;
+}
+.modal-title { font-size: 17px; font-weight: 700; margin-bottom: 14px; }
+.field-lbl { font-size: 13px; font-weight: 600; color: var(--muted); margin: 12px 0 5px; }
+.field-lbl:first-of-type { margin-top: 0; }
+.modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+.modal-btn { flex: 1; padding: 13px; border-radius: 11px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+.modal-cancel { background: var(--border); color: var(--text); }
+.modal-save { background: var(--accent); color: #fff; }
+
+/* BACKUP REMINDER */
+.backup-banner {
+  background: var(--warn); color: var(--warn-text);
+  padding: 10px 16px; font-size: 13px; font-weight: 500;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* EMPTY */
+.empty { text-align: center; padding: 40px 16px; color: var(--muted); }
+.empty-icon { font-size: 44px; margin-bottom: 10px; }
+.empty-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.empty-sub { font-size: 13px; }
+
+/* INSTALL HINT */
+.install-hint {
+  background: var(--tag); color: var(--tag-text);
+  padding: 12px 16px; font-size: 13px; border-radius: 12px;
+  margin: 10px 16px; line-height: 1.5;
+}
+</style>
+</head>
+<body class="theme-colorful">
+<div class="app">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <h1 id="topbar-title">🌸 Health Tracker</h1>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Clean Mode</button>
+</div>
+
+<!-- PROFILE BAR -->
+<div class="profile-bar">
+  <button class="profile-btn active" id="pb0" onclick="switchProfile(0)"><span id="pn0">Child 1</span></button>
+  <button class="profile-btn" id="pb1" onclick="switchProfile(1)"><span id="pn1">Child 2</span></button>
+  <button class="edit-names-btn" onclick="openNamesModal()" title="Edit names">✏️</button>
+</div>
+
+<!-- BACKUP REMINDER (hidden by default) -->
+<div class="backup-banner" id="backup-banner" style="display:none">
+  ⚠️ Tip: Export your data regularly via the Share tab to avoid losing it.
+  <button onclick="document.getElementById('backup-banner').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:16px;margin-left:auto">✕</button>
+</div>
+
+<!-- SCREEN: LOG -->
+<div class="screen active" id="screen-log">
+
+  <div class="date-header">
+    <div class="date-nav">
+      <button class="date-nav-btn" onclick="changeDate(-1)">‹</button>
+      <span class="date-display" id="date-display">Today</span>
+      <button class="date-nav-btn" onclick="changeDate(1)">›</button>
+    </div>
+    <button class="add-btn" onclick="openAddMeal(null)">+ Add Meal</button>
+  </div>
+
+  <div id="meals-container"></div>
+
+  <!-- SYMPTOMS -->
+  <div class="card">
+    <div class="card-title">💊 Symptoms</div>
+    <div class="section-label">Severity (1 = mild · 10 = severe)</div>
+    <div class="sev-grid" id="sev-grid"></div>
+    <div class="section-label">What's happening today</div>
+    <div class="chip-grid" id="symptom-chips"></div>
+    <div class="section-label">Notes</div>
+    <textarea id="symptom-notes" rows="2" placeholder="Any extra details about how you're feeling..."></textarea>
+  </div>
+
+  <!-- PERIOD -->
+  <div class="card" id="period-card">
+    <div class="card-title">🌸 Period & Hormonal</div>
+    <div class="toggle-row">
+      <span class="toggle-label">Period today?</span>
+      <label class="sw"><input type="checkbox" id="period-toggle" onchange="onPeriodToggle()"><span class="sw-track"></span></label>
+    </div>
+    <div id="period-extras" style="display:none">
+      <div class="section-label">Flow level</div>
+      <div class="chip-grid">
+        <button class="chip" id="fl-light" onclick="setFlow('light')">Light</button>
+        <button class="chip" id="fl-medium" onclick="setFlow('medium')">Medium</button>
+        <button class="chip" id="fl-heavy" onclick="setFlow('heavy')">Heavy</button>
+      </div>
+      <div class="section-label">Notes</div>
+      <textarea id="period-notes" rows="2" placeholder="Cramps, mood changes, bloating..."></textarea>
+    </div>
+  </div>
+
+  <button class="save-btn" id="save-btn" onclick="saveDay()">Save Log for This Day</button>
+</div>
+
+<!-- SCREEN: HISTORY -->
+<div class="screen" id="screen-history">
+  <div style="padding:14px 16px 4px">
+    <div style="font-size:18px;font-weight:700;margin-bottom:2px">Log History</div>
+    <div style="font-size:13px;color:var(--muted)" id="history-subhead"></div>
+  </div>
+  <div style="padding:0 16px" id="history-list"></div>
+</div>
+
+<!-- SCREEN: TRIGGERS -->
+<div class="screen" id="screen-triggers">
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">🚩 Potential Triggers</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Foods and ingredients that appeared on or before high-symptom days (severity ≥ 7). The more often they appear, the more likely they're a trigger.</p>
+    <div id="triggers-list"></div>
+  </div>
+</div>
+
+<!-- SCREEN: SHARE -->
+<div class="screen" id="screen-share">
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">📤 Export & Share</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Export all data as a file. Send it via iMessage, WhatsApp, or email. The other person opens the file and imports it in the Share tab.</p>
+    <button class="share-btn share-export" onclick="exportData()">📤 Export All Data (both children)</button>
+    <button class="share-btn share-import" onclick="document.getElementById('import-file').click()">📥 Import Data from File</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    <div id="share-msg"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚙️ Settings</div>
+    <div class="settings-row">
+      <span class="settings-lbl">Child 1 name</span>
+      <input type="text" id="sn0" placeholder="Child 1" oninput="liveUpdateName(0,this.value)">
+    </div>
+    <div class="settings-row">
+      <span class="settings-lbl">Child 2 name</span>
+      <input type="text" id="sn1" placeholder="Child 2" oninput="liveUpdateName(1,this.value)">
+    </div>
+    <div class="settings-row">
+      <span class="settings-lbl">Clear all data</span>
+      <button class="btn-sm btn-danger" onclick="clearAllData()">Clear data</button>
+    </div>
+  </div>
+
+  <div class="install-hint">
+    📱 <strong>Add to home screen:</strong> In Safari, tap the Share button → "Add to Home Screen" to use this like a regular app — even offline.
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-item active" id="nav-log" onclick="showScreen('log')">
+    <span class="nav-icon">📋</span><span>Log</span>
+  </button>
+  <button class="nav-item" id="nav-history" onclick="showScreen('history')">
+    <span class="nav-icon">📅</span><span>History</span>
+  </button>
+  <button class="nav-item" id="nav-triggers" onclick="showScreen('triggers')">
+    <span class="nav-icon">🚩</span><span>Triggers</span>
+  </button>
+  <button class="nav-item" id="nav-share" onclick="showScreen('share')">
+    <span class="nav-icon">🔗</span><span>Share</span>
+  </button>
+</nav>
+
+<!-- MODAL: ADD/EDIT MEAL -->
+<div class="modal-overlay" id="meal-modal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="meal-modal-title">Add Meal</div>
+    <div class="field-lbl">Meal type</div>
+    <select id="m-type">
+      <option value="breakfast">🌅 Breakfast</option>
+      <option value="lunch">🌤️ Lunch</option>
+      <option value="dinner">🌙 Dinner</option>
+      <option value="snack">🍎 Snack</option>
+    </select>
+    <div class="field-lbl">Dish name *</div>
+    <input type="text" id="m-dish" placeholder="e.g. Chicken and rice bowl">
+    <div class="field-lbl">Key ingredients (comma separated)</div>
+    <input type="text" id="m-ingredients" placeholder="e.g. chicken, white rice, broccoli, olive oil">
+    <div class="field-lbl">Notes (optional)</div>
+    <textarea id="m-notes" rows="2" placeholder="How it was cooked, portion size, anything unusual..."></textarea>
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" onclick="closeMealModal()">Cancel</button>
+      <button class="modal-btn modal-save" onclick="saveMeal()">Save Meal</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT NAMES -->
+<div class="modal-overlay" id="names-modal">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Edit Names</div>
+    <div class="field-lbl">Child 1 name</div>
+    <input type="text" id="nn0" placeholder="Child 1">
+    <div class="field-lbl">Child 2 name</div>
+    <input type="text" id="nn1" placeholder="Child 2">
+    <div class="modal-actions">
+      <button class="modal-btn modal-cancel" onclick="closeNamesModal()">Cancel</button>
+      <button class="modal-btn modal-save" onclick="saveNames()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SK = 'ht_v3';
+const SYMPTOMS = ['Pain','Bloating','Nausea','Fatigue','Diarrhea','Cramping','Vomiting','Appetite loss','Fever','Headache','Joint pain','Mouth sores'];
+const MEAL_TYPES = ['breakfast','lunch','dinner','snack'];
+const MEAL_EMOJI = { breakfast:'🌅', lunch:'🌤️', dinner:'🌙', snack:'🍎' };
+
+let S = { names:['Child 1','Child 2'], theme:'colorful', logs:[{},{}], activeProfile:0 };
+let curDate = toDateStr(new Date());
+let tempDay = null;
+let editMealId = null;
+
+function toDateStr(d) { return d.toISOString().split('T')[0]; }
+
+function loadState() {
+  try { const r = localStorage.getItem(SK); if(r) S = JSON.parse(r); } catch(e){}
+  // ensure logs array has 2 entries
+  if (!S.logs) S.logs = [{},{}];
+  while (S.logs.length < 2) S.logs.push({});
+  if (!S.names) S.names = ['Child 1','Child 2'];
+}
+
+function saveState() {
+  try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {
+    alert('Storage is full or unavailable. Please export your data from the Share tab.');
+  }
+}
+
+function getDayData(profile, date) {
+  if (!S.logs[profile][date]) {
+    S.logs[profile][date] = { meals:[], severity:0, symptoms:[], notes:'', period:false, flow:'', periodNotes:'' };
+  }
+  return S.logs[profile][date];
+}
+
+function workDay() {
+  if (!tempDay) tempDay = JSON.parse(JSON.stringify(getDayData(S.activeProfile, curDate)));
+  return tempDay;
+}
+
+// ---- THEME ----
+function toggleTheme() {
+  S.theme = S.theme === 'colorful' ? 'clean' : 'colorful';
+  applyTheme();
+  saveState();
+}
+function applyTheme() {
+  document.body.className = 'theme-' + S.theme;
+  document.getElementById('theme-btn').textContent = S.theme === 'colorful' ? 'Clean Mode' : 'Color Mode';
+  document.getElementById('topbar-title').textContent = S.theme === 'colorful' ? '🌸 Health Tracker' : 'Health Tracker';
+}
+
+// ---- PROFILE ----
+function switchProfile(idx) {
+  S.activeProfile = idx;
+  tempDay = null;
+  document.getElementById('pb0').className = 'profile-btn' + (idx===0?' active':'');
+  document.getElementById('pb1').className = 'profile-btn' + (idx===1?' active':'');
+  renderLog();
+  saveState();
+}
+
+// ---- NAVIGATION ----
+function showScreen(name) {
+  ['log','history','triggers','share'].forEach(s => {
+    document.getElementById('screen-'+s).className = 'screen' + (s===name?' active':'');
+    document.getElementById('nav-'+s).className = 'nav-item' + (s===name?' active':'');
+  });
+  if (name==='history') renderHistory();
+  if (name==='triggers') renderTriggers();
+  if (name==='share') renderShare();
+}
+
+// ---- DATE ----
+function changeDate(dir) {
+  const d = new Date(curDate + 'T12:00:00');
+  d.setDate(d.getDate() + dir);
+  curDate = toDateStr(d);
+  tempDay = null;
+  renderLog();
+}
+
+// ---- LOG RENDER ----
+function renderLog() {
+  const d = workDay();
+  const isToday = curDate === toDateStr(new Date());
+  const dt = new Date(curDate + 'T12:00:00');
+  document.getElementById('date-display').textContent = isToday ? 'Today' : dt.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('pn0').textContent = S.names[0];
+  document.getElementById('pn1').textContent = S.names[1];
+  renderMeals(d);
+  renderSevGrid(d.severity||0);
+  renderSymChips(d.symptoms||[]);
+  document.getElementById('symptom-notes').value = d.notes||'';
+  document.getElementById('period-toggle').checked = !!d.period;
+  document.getElementById('period-extras').style.display = d.period?'':'none';
+  document.getElementById('period-notes').value = d.periodNotes||'';
+  ['light','medium','heavy'].forEach(f => {
+    const el = document.getElementById('fl-'+f);
+    if(el) el.className = 'chip' + (d.flow===f?' sel-flow':'');
+  });
+  document.getElementById('symptom-notes').oninput = e => { workDay().notes = e.target.value; };
+  document.getElementById('period-notes').oninput = e => { workDay().periodNotes = e.target.value; };
+}
+
+function renderMeals(d) {
+  const c = document.getElementById('meals-container');
+  c.innerHTML = '';
+  MEAL_TYPES.forEach(type => {
+    const meals = (d.meals||[]).filter(m => m.type===type);
+    const div = document.createElement('div');
+    div.className = 'meal-section';
+    const entries = meals.map(m => `
+      <div class="meal-entry">
+        <div class="meal-entry-name">${esc(m.dish)}</div>
+        ${m.ingredients ? `<div class="meal-entry-ingredients">${esc(m.ingredients)}</div>` : ''}
+        ${m.notes ? `<div class="meal-entry-note">${esc(m.notes)}</div>` : ''}
+        <div class="meal-entry-actions">
+          <button class="btn-sm" onclick="openEditMeal('${m.id}')">Edit</button>
+          <button class="btn-sm btn-danger" onclick="deleteMeal('${m.id}')">Remove</button>
+        </div>
+      </div>`).join('');
+    div.innerHTML = `
+      <div class="meal-header">
+        <div class="meal-header-left">
+          <span class="meal-emoji">${MEAL_EMOJI[type]}</span>
+          <span class="meal-label">${type.charAt(0).toUpperCase()+type.slice(1)}</span>
+          <span class="meal-count">${meals.length}</span>
+        </div>
+        <button class="add-meal-btn" onclick="openAddMeal('${type}')">+ Add</button>
+      </div>
+      ${entries}`;
+    c.appendChild(div);
+  });
+}
+
+function renderSevGrid(cur) {
+  const g = document.getElementById('sev-grid');
+  g.innerHTML = '';
+  for (let i=1;i<=10;i++) {
+    const b = document.createElement('button');
+    b.className = 'sev-btn' + (i===cur ? (i<=3?' sel-low':i<=6?' sel-mid':' sel-high') : '');
+    b.textContent = i;
+    b.onclick = (n => () => { workDay().severity=n; renderSevGrid(n); })(i);
+    g.appendChild(b);
+  }
+}
+
+function renderSymChips(active) {
+  const c = document.getElementById('symptom-chips');
+  c.innerHTML = '';
+  SYMPTOMS.forEach(s => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (active.includes(s)?' sel':'');
+    b.textContent = s;
+    b.onclick = () => {
+      const d = workDay();
+      d.symptoms = d.symptoms||[];
+      const i = d.symptoms.indexOf(s);
+      if(i>-1) d.symptoms.splice(i,1); else d.symptoms.push(s);
+      renderSymChips(d.symptoms);
+    };
+    c.appendChild(b);
+  });
+}
+
+function onPeriodToggle() {
+  const checked = document.getElementById('period-toggle').checked;
+  workDay().period = checked;
+  document.getElementById('period-extras').style.display = checked?'':'none';
+}
+
+function setFlow(f) {
+  workDay().flow = f;
+  ['light','medium','heavy'].forEach(x => {
+    document.getElementById('fl-'+x).className = 'chip' + (x===f?' sel-flow':'');
+  });
+}
+
+function saveDay() {
+  if (!tempDay) return;
+  S.logs[S.activeProfile][curDate] = JSON.parse(JSON.stringify(tempDay));
+  saveState();
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '✓ Saved!';
+  btn.className = 'save-btn saved';
+  setTimeout(() => { btn.textContent = 'Save Log for This Day'; btn.className = 'save-btn'; }, 2000);
+}
+
+// ---- MEAL MODAL ----
+function openAddMeal(type) {
+  editMealId = null;
+  document.getElementById('meal-modal-title').textContent = 'Add Meal';
+  document.getElementById('m-dish').value = '';
+  document.getElementById('m-ingredients').value = '';
+  document.getElementById('m-notes').value = '';
+  if (type) document.getElementById('m-type').value = type;
+  document.getElementById('meal-modal').className = 'modal-overlay open';
+  setTimeout(() => document.getElementById('m-dish').focus(), 100);
+}
+
+function openEditMeal(id) {
+  const m = workDay().meals.find(x=>x.id===id);
+  if(!m) return;
+  editMealId = id;
+  document.getElementById('meal-modal-title').textContent = 'Edit Meal';
+  document.getElementById('m-type').value = m.type;
+  document.getElementById('m-dish').value = m.dish;
+  document.getElementById('m-ingredients').value = m.ingredients||'';
+  document.getElementById('m-notes').value = m.notes||'';
+  document.getElementById('meal-modal').className = 'modal-overlay open';
+}
+
+function closeMealModal() { document.getElementById('meal-modal').className = 'modal-overlay'; }
+
+function saveMeal() {
+  const dish = document.getElementById('m-dish').value.trim();
+  if (!dish) { document.getElementById('m-dish').focus(); return; }
+  const d = workDay();
+  if (!d.meals) d.meals = [];
+  const entry = {
+    id: editMealId || Date.now().toString(36)+Math.random().toString(36).slice(2),
+    type: document.getElementById('m-type').value,
+    dish, ingredients: document.getElementById('m-ingredients').value.trim(),
+    notes: document.getElementById('m-notes').value.trim()
+  };
+  if (editMealId) { const i=d.meals.findIndex(x=>x.id===editMealId); if(i>-1) d.meals[i]=entry; }
+  else d.meals.push(entry);
+  closeMealModal();
+  renderMeals(d);
+}
+
+function deleteMeal(id) {
+  if (!confirm('Remove this meal entry?')) return;
+  workDay().meals = workDay().meals.filter(m=>m.id!==id);
+  renderMeals(workDay());
+}
+
+// ---- NAMES MODAL ----
+function openNamesModal() {
+  document.getElementById('nn0').value = S.names[0];
+  document.getElementById('nn1').value = S.names[1];
+  document.getElementById('names-modal').className = 'modal-overlay open';
+}
+function closeNamesModal() { document.getElementById('names-modal').className = 'modal-overlay'; }
+function saveNames() {
+  S.names[0] = document.getElementById('nn0').value.trim()||'Child 1';
+  S.names[1] = document.getElementById('nn1').value.trim()||'Child 2';
+  document.getElementById('pn0').textContent = S.names[0];
+  document.getElementById('pn1').textContent = S.names[1];
+  saveState();
+  closeNamesModal();
+}
+
+// ---- HISTORY ----
+function renderHistory() {
+  const hl = document.getElementById('history-list');
+  const logs = S.logs[S.activeProfile]||{};
+  const dates = Object.keys(logs).sort().reverse();
+  document.getElementById('history-subhead').textContent = S.names[S.activeProfile] + ' — ' + dates.length + ' entries';
+  if (!dates.length) { hl.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">No entries yet</div><div class="empty-sub">Start logging in the Log tab</div></div>'; return; }
+  hl.innerHTML = dates.map(date => {
+    const d = logs[date];
+    const sev = d.severity||0;
+    const sevCls = sev>=7?'high':sev>=4?'mid':'low';
+    const dt = new Date(date+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+    let tags = (d.meals||[]).map(m=>`<span class="htag">${esc(m.dish)}</span>`).join('');
+    tags += (d.symptoms||[]).map(s=>`<span class="htag bad">${esc(s)}</span>`).join('');
+    if (d.period) tags += `<span class="htag period">Period${d.flow?' ('+d.flow+')':''}</span>`;
+    return `<div class="history-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="history-date">${dt}</span>
+        ${sev>0?`<span class="sev-pill ${sevCls}">Severity ${sev}/10</span>`:''}
+      </div>
+      ${tags?`<div class="tag-row">${tags}</div>`:''}
+      ${d.notes?`<div class="history-note">${esc(d.notes)}</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ---- TRIGGERS ----
+function renderTriggers() {
+  const tl = document.getElementById('triggers-list');
+  const logs = S.logs[S.activeProfile]||{};
+  const dates = Object.keys(logs).sort();
+  const fc = {};
+  dates.forEach((date,i) => {
+    const d = logs[date];
+    if ((d.severity||0) >= 7) {
+      // check same day and previous day
+      [date, i>0?dates[i-1]:null].filter(Boolean).forEach(dd => {
+        (logs[dd]?.meals||[]).forEach(m => {
+          const items = [m.dish.trim(), ...((m.ingredients||'').split(',').map(x=>x.trim()).filter(Boolean))];
+          items.forEach(item => { if(item) fc[item] = (fc[item]||0)+1; });
+        });
+      });
+    }
+  });
+  const sorted = Object.entries(fc).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  if (!sorted.length) {
+    tl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">No triggers found yet</div><div class="empty-sub">Log at least a few days with high-symptom days to see patterns here.</div></div>';
+    return;
+  }
+  const max = sorted[0][1];
+  tl.innerHTML = sorted.map(([name,count]) => `
+    <div class="trigger-item">
+      <div>
+        <div class="trigger-name">${esc(name)}</div>
+        <div class="trigger-sub">Before ${count} high-symptom day${count!==1?'s':''}</div>
+      </div>
+      <div class="tbar-wrap"><div class="tbar" style="width:${Math.round(count/max*100)}%"></div></div>
+    </div>`).join('');
+}
+
+// ---- SHARE ----
+function renderShare() {
+  document.getElementById('sn0').value = S.names[0];
+  document.getElementById('sn1').value = S.names[1];
+}
+
+function liveUpdateName(idx, val) {
+  S.names[idx] = val.trim()||('Child '+(idx+1));
+  document.getElementById('pn'+idx).textContent = S.names[idx];
+  saveState();
+}
+
+function exportData() {
+  const json = JSON.stringify(S, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().split('T')[0];
+  a.href = url; a.download = 'health-tracker-'+ts+'.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  document.getElementById('share-msg').innerHTML = '<div class="msg ok">✓ File exported! Send it via iMessage, WhatsApp, or save to iCloud Drive.</div>';
+}
+
+function importData(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imp = JSON.parse(ev.target.result);
+      if (!imp.logs || !Array.isArray(imp.logs)) throw new Error('bad format');
+      if (confirm('This will replace all current data with the imported file. Continue?')) {
+        S = imp;
+        saveState(); tempDay=null;
+        applyTheme(); renderLog();
+        document.getElementById('share-msg').innerHTML = '<div class="msg ok">✓ Data imported successfully!</div>';
+      }
+    } catch(err) {
+      document.getElementById('share-msg').innerHTML = '<div class="msg err">❌ Could not read this file. Make sure it\'s a valid export from this app.</div>';
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function clearAllData() {
+  if (!confirm('Delete ALL data for both children? This cannot be undone. Export first if you want a backup.')) return;
+  S.logs = [{},{}]; tempDay=null;
+  saveState(); renderLog();
+  document.getElementById('share-msg').innerHTML = '<div class="msg ok">✓ All data cleared.</div>';
+}
+
+// ---- UTILS ----
+function esc(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// close modals on backdrop click
+document.getElementById('meal-modal').addEventListener('click', function(e) { if(e.target===this) closeMealModal(); });
+document.getElementById('names-modal').addEventListener('click', function(e) { if(e.target===this) closeNamesModal(); });
+
+// show backup reminder after 7 days of use
+function checkBackupReminder() {
+  const first = localStorage.getItem('ht_first_use');
+  if (!first) { localStorage.setItem('ht_first_use', Date.now()); return; }
+  const days = (Date.now()-parseInt(first))/(1000*60*60*24);
+  const last = localStorage.getItem('ht_last_export');
+  const daysSinceExport = last ? (Date.now()-parseInt(last))/(1000*60*60*24) : days;
+  if (daysSinceExport > 7) document.getElementById('backup-banner').style.display = 'flex';
+}
+
+// INIT
+loadState();
+applyTheme();
+renderLog();
+checkBackupReminder();
+</script>
+</body>
+</html>
