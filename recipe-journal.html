@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Recipe Journal">
+<title>Recipe Journal</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 16px; }
+
+.theme-colorful {
+  --bg: #fff8f0; --card: #fff; --accent: #f97316; --accent2: #8b5cf6;
+  --text: #1c1917; --muted: #78716c; --border: #e7e5e4;
+  --nav: #ea580c; --nav-text: #fff;
+  --tag: #fff7ed; --tag-text: #c2410c;
+  --tag2: #f3f0ff; --tag2-text: #6d28d9;
+  --good: #d1fae5; --good-text: #065f46;
+  --warn: #fef3c7; --warn-text: #92400e;
+  --input-bg: #fffbf7;
+  --fav: #f97316;
+}
+.theme-clean {
+  --bg: #f9fafb; --card: #fff; --accent: #2563eb; --accent2: #7c3aed;
+  --text: #111827; --muted: #6b7280; --border: #e5e7eb;
+  --nav: #1e293b; --nav-text: #fff;
+  --tag: #eff6ff; --tag-text: #1d4ed8;
+  --tag2: #f3f0ff; --tag2-text: #6d28d9;
+  --good: #d1fae5; --good-text: #065f46;
+  --warn: #fef3c7; --warn-text: #92400e;
+  --input-bg: #f9fafb;
+  --fav: #f59e0b;
+}
+
+body { background: var(--bg); color: var(--text); }
+.theme-colorful body, body.theme-colorful { background: linear-gradient(160deg, #fdf4ff 0%, #f5f3ff 50%, #fdf4ff 100%); background-attachment: fixed; }
+.app { max-width: 480px; margin: 0 auto; padding-bottom: 80px; }
+
+/* TOPBAR */
+.topbar { background: var(--nav); color: var(--nav-text); padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar h1 { font-size: 18px; font-weight: 700; }
+.theme-btn { background: rgba(255,255,255,0.2); border: none; color: var(--nav-text); padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-weight: 500; }
+
+/* NAV */
+.nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: var(--card); border-top: 1px solid var(--border); display: flex; z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 4px; cursor: pointer; color: var(--muted); font-size: 10px; gap: 2px; border: none; background: none; }
+.nav-item.active { color: var(--accent); }
+.theme-colorful .nav-item.active { color: #c026d3; }
+.nav-icon { font-size: 22px; line-height: 1; }
+
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* SEARCH BAR */
+.search-bar { padding: 12px 16px; display: flex; gap: 8px; align-items: center; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 49px; z-index: 98; }
+.search-input { flex: 1; border: 1.5px solid var(--border); border-radius: 10px; padding: 9px 12px; font-size: 14px; background: var(--input-bg); color: var(--text); outline: none; font-family: inherit; }
+.search-input:focus { border-color: var(--accent); }
+.add-recipe-btn { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 9px 14px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.theme-colorful .add-recipe-btn { background: linear-gradient(135deg, #c026d3, #7c3aed); }
+
+/* FILTER CHIPS */
+.filter-bar { padding: 10px 16px; display: flex; gap: 7px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; border-bottom: 1px solid var(--border); background: var(--card); }
+.filter-bar::-webkit-scrollbar { display: none; }
+.fchip { padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; white-space: nowrap; font-weight: 500; flex-shrink: 0; }
+.fchip.active { background: var(--tag); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.theme-colorful .fchip.active { background: linear-gradient(135deg,#fdf4ff,#ede9fe); border-color: #c026d3; color: #c026d3; }
+
+/* RECIPE CARDS */
+.recipes-grid { padding: 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+.recipe-card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 15px; cursor: pointer; transition: border-color 0.15s; }
+.recipe-card:active { border-color: var(--accent); }
+.recipe-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.recipe-name { font-size: 16px; font-weight: 700; flex: 1; line-height: 1.3; }
+.fav-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 0 0 0 4px; flex-shrink: 0; line-height: 1; }
+.recipe-meta { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.meta-pill { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 3px; }
+.recipe-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.rtag { padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 600; background: var(--tag); color: var(--tag-text); }
+.rtag.crohns { background: var(--good); color: var(--good-text); }
+.rtag.custom { background: var(--tag2); color: var(--tag2-text); }
+.theme-colorful .rtag { background: #fdf4ff; color: #a21caf; border: 1px solid #f0abfc; }
+.theme-colorful .rtag.crohns { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+.theme-colorful .rtag.custom { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+.recipe-note-preview { font-size: 13px; color: var(--muted); margin-top: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* EMPTY */
+.empty { text-align: center; padding: 50px 16px; color: var(--muted); }
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.empty-sub { font-size: 14px; line-height: 1.5; }
+
+/* RECIPE DETAIL */
+.detail-header { background: var(--nav); color: var(--nav-text); padding: 14px 16px; display: flex; align-items: center; gap: 10px; position: sticky; top: 0; z-index: 100; }
+.back-btn { background: rgba(255,255,255,0.2); border: none; color: var(--nav-text); width: 34px; height: 34px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.detail-title { font-size: 17px; font-weight: 700; flex: 1; line-height: 1.2; }
+.detail-fav { background: none; border: none; font-size: 24px; cursor: pointer; }
+.detail-edit { background: rgba(255,255,255,0.2); border: none; color: var(--nav-text); padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; font-weight: 500; }
+
+.detail-body { padding: 0 0 20px; }
+.detail-section { padding: 16px 16px 0; }
+.detail-section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 10px; }
+.detail-meta-row { display: flex; gap: 12px; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.detail-meta-item { display: flex; align-items: center; gap: 5px; font-size: 14px; color: var(--muted); }
+.detail-meta-item strong { color: var(--text); font-weight: 600; }
+
+.ingredient-item { padding: 8px 0; border-bottom: 1px solid var(--border); }
+.ingredient-item:last-child { border-bottom: none; }
+.ingredient-name { font-size: 14px; font-weight: 500; }
+.ingredient-alt { font-size: 12px; color: var(--accent2); margin-top: 2px; font-style: italic; }
+
+.step-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.step-item:last-child { border-bottom: none; }
+.step-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.theme-colorful .step-num { background: linear-gradient(135deg, #c026d3, #7c3aed); }
+.step-text { font-size: 14px; line-height: 1.5; flex: 1; }
+
+.notes-box { background: var(--warn); border-radius: 10px; padding: 12px; margin-top: 4px; font-size: 14px; line-height: 1.5; color: var(--warn-text); }
+.source-link { font-size: 13px; color: var(--accent); text-decoration: none; word-break: break-all; }
+
+/* CARDS */
+.card { background: var(--card); border-radius: 14px; border: 1px solid var(--border); padding: 16px; margin: 12px 16px; }
+.theme-colorful .card { border-color: #e9d5ff; box-shadow: 0 2px 8px rgba(192,38,211,0.06); }
+.theme-colorful .recipe-card { border-color: #e9d5ff; box-shadow: 0 2px 8px rgba(124,58,237,0.07); }
+.theme-colorful .recipe-card:active { border-color: #c026d3; }
+.theme-colorful .meal-section { border-color: #e9d5ff; }
+.card-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+
+/* FORM */
+textarea, input[type=text], input[type=url], input[type=number], input[type=password], select {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; font-size: 14px; font-family: inherit;
+  background: var(--input-bg); color: var(--text); outline: none; transition: border-color 0.15s;
+}
+textarea { resize: vertical; }
+textarea:focus, input:focus, select:focus { border-color: var(--accent); }
+.field-lbl { font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 5px; }
+.field-lbl:first-child { margin-top: 0; }
+.field-row { display: flex; gap: 8px; }
+.field-row > * { flex: 1; }
+
+/* INGREDIENT BUILDER */
+.ing-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.ing-row { display: flex; gap: 6px; align-items: flex-start; background: var(--bg); border-radius: 10px; padding: 8px; }
+.ing-row-fields { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.ing-row input { padding: 7px 10px; font-size: 13px; }
+.remove-btn { background: none; border: none; color: #dc2626; font-size: 20px; cursor: pointer; padding: 4px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.add-row-btn { background: var(--tag); color: var(--accent); border: 1.5px dashed var(--accent); border-radius: 10px; padding: 8px; width: 100%; font-size: 13px; font-weight: 600; cursor: pointer; }
+
+/* STEPS BUILDER */
+.steps-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.step-row { display: flex; gap: 8px; align-items: flex-start; }
+.step-row-num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 10px; }
+.step-row textarea { font-size: 13px; padding: 8px 10px; }
+
+/* TAG BUILDER */
+.tag-grid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.tag-toggle { padding: 6px 12px; border-radius: 20px; font-size: 12px; border: 1.5px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-weight: 500; }
+.tag-toggle.sel { background: var(--good); border-color: #6ee7b7; color: var(--good-text); }
+.custom-tag-row { display: flex; gap: 6px; }
+.custom-tag-row input { flex: 1; }
+.custom-tag-row button { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+
+
+/* URL FETCH */
+.url-fetch-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.url-fetch-row input { flex: 1; }
+.fetch-btn { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+.fetch-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.fetch-status { font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; }
+.fetch-status.loading { background: var(--tag); color: var(--tag-text); }
+.fetch-status.ok { background: var(--good); color: var(--good-text); }
+.fetch-status.err { background: #fee2e2; color: #991b1b; }
+.no-api-hint { font-size: 13px; color: var(--muted); background: var(--bg); border-radius: 8px; padding: 10px 12px; line-height: 1.5; }
+.api-key-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.api-key-row input { flex: 1; font-size: 13px; padding: 8px 10px; }
+.api-key-row button { background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.api-status-badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; }
+.api-status-badge.set { background: var(--good); color: var(--good-text); }
+.api-status-badge.unset { background: #fee2e2; color: #991b1b; }
+
+/* PASTE IMPORT */
+.paste-area { background: var(--bg); border: 1.5px dashed var(--border); border-radius: 12px; padding: 16px; }
+.paste-area textarea { background: var(--card); }
+.parse-btn { width: 100%; background: var(--accent2); color: #fff; border: none; border-radius: 10px; padding: 11px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+
+/* SAVE/CANCEL */
+.form-actions { display: flex; gap: 10px; padding: 16px; }
+.btn-cancel { flex: 1; padding: 13px; border-radius: 11px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; background: var(--border); color: var(--text); }
+.btn-save { flex: 2; padding: 13px; border-radius: 11px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; background: var(--accent); color: #fff; }
+.theme-colorful .btn-save { background: linear-gradient(135deg, #c026d3, #7c3aed); }
+
+/* SHARE */
+.share-btn { display: block; width: 100%; padding: 13px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; margin-bottom: 10px; }
+.share-export { background: var(--tag); color: var(--accent); border: 1.5px solid var(--accent); }
+.share-import { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
+.msg { padding: 10px 12px; border-radius: 10px; font-size: 13px; margin-top: 10px; font-weight: 500; }
+.msg.ok { background: var(--good); color: var(--good-text); }
+.msg.err { background: #fee2e2; color: #991b1b; }
+
+.install-hint { background: var(--tag); color: var(--tag-text); padding: 12px 16px; font-size: 13px; border-radius: 12px; margin: 10px 16px; line-height: 1.5; }
+.recipe-photo { width: 100%; height: 180px; object-fit: cover; border-radius: 12px 12px 0 0; display: block; background: var(--bg); }
+.recipe-photo-placeholder { width: 100%; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 36px; background: var(--bg); border-radius: 12px 12px 0 0; }
+.recipe-card-photo { width: 100%; height: 140px; object-fit: cover; border-radius: 12px 12px 0 0; display: block; }
+.photo-upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; background: var(--bg); margin-bottom: 10px; }
+.screenshot-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.screenshot-thumb { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+.screenshot-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.screenshot-thumb .del-btn { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.screenshot-upload-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 11px; border-radius: 10px; border: 2px dashed var(--border); background: var(--bg); color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; }
+.screenshot-upload-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+.ocr-status { font-size: 13px; padding: 8px 12px; border-radius: 8px; margin-top: 8px; }
+.ocr-status.loading { background: var(--tag2); color: var(--tag2-text); }
+.ocr-status.ok { background: var(--good); color: var(--good-text); }
+.ocr-status.err { background: #fee2e2; color: #991b1b; }
+.detail-screenshots { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.detail-screenshot { width: calc(50% - 4px); border-radius: 10px; overflow: hidden; cursor: pointer; }
+.detail-screenshot img { width: 100%; display: block; border-radius: 10px; }
+.photo-upload-area:hover { border-color: var(--accent); }
+.photo-preview { width: 100%; height: 160px; object-fit: cover; border-radius: 10px; margin-bottom: 8px; display: block; }
+.detail-photo { width: 100%; max-height: 240px; object-fit: cover; display: block; }
+.grocery-category { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 14px 0 6px; }
+.grocery-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--card); border-radius: 10px; border: 1px solid var(--border); margin-bottom: 6px; cursor: pointer; }
+.grocery-item.checked { opacity: 0.45; }
+.grocery-item.checked .grocery-name { text-decoration: line-through; }
+.grocery-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.grocery-item.checked .grocery-check { background: var(--accent); border-color: var(--accent); color: #fff; }
+.grocery-name { font-size: 14px; font-weight: 500; flex: 1; }
+.grocery-scd { font-size: 11px; color: #991b1b; background: #fee2e2; padding: 2px 7px; border-radius: 6px; font-weight: 600; }
+.grocery-recipe { font-size: 11px; color: var(--muted); }
+.recipe-card.selected { border: 2px solid var(--accent); background: var(--tag); }
+.recipe-select-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; }
+.recipe-card.selected .recipe-select-dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+</style>
+</head>
+<body class="theme-colorful">
+<div class="app" id="app">
+
+<!-- TOPBAR -->
+<div class="topbar" id="main-topbar">
+  <h1 id="topbar-title">🍽️ Recipe Journal</h1>
+  <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Clean Mode</button>
+</div>
+
+<!-- SCREEN: BROWSE -->
+<div class="screen active" id="screen-browse">
+  <div class="search-bar">
+    <input class="search-input" id="search-input" placeholder="Search recipes..." oninput="renderBrowse()" type="text">
+    <button class="add-recipe-btn" id="select-mode-btn" onclick="toggleSelectMode()" style="background:var(--tag);color:var(--accent);margin-right:4px">Select</button>
+    <button class="add-recipe-btn" onclick="openAddForm()">+ Add</button>
+  </div>
+  <div id="select-bar" style="display:none;padding:8px 16px;background:var(--card);border-bottom:1px solid var(--border);align-items:center;justify-content:space-between">
+    <span id="select-count" style="font-size:13px;color:var(--muted)">0 selected</span>
+    <button class="add-recipe-btn" onclick="addSelectedToGrocery()" style="font-size:13px;padding:7px 12px">🛒 Add to Grocery</button>
+  </div>
+  <div id="migrate-banner" style="display:none;background:#fef3c7;padding:12px 16px;gap:10px;align-items:center;border-bottom:1px solid #fcd34d">
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:#92400e">Have recipes in an older version?</div>
+      <div style="font-size:12px;color:#92400e;margin-top:2px">Go to ⚙️ Settings → Import Recipes to restore them</div>
+    </div>
+    <button onclick="document.getElementById('migrate-banner').style.display='none';showScreen('share')" style="background:#f59e0b;color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer">Import</button>
+    <button onclick="document.getElementById('migrate-banner').style.display='none'" style="background:none;border:none;font-size:18px;cursor:pointer;color:#92400e">✕</button>
+  </div>
+  <div class="filter-bar" id="filter-bar"></div>
+  <div class="recipes-grid" id="recipes-grid"></div>
+</div>
+
+<!-- SCREEN: FAVORITES -->
+<div class="screen" id="screen-favs">
+  <div style="padding:14px 16px 4px"><div style="font-size:18px;font-weight:700">Favorites</div></div>
+  <div class="recipes-grid" id="favs-grid"></div>
+</div>
+
+<!-- SCREEN: DETAIL -->
+<div class="screen" id="screen-detail">
+  <div class="detail-header">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="detail-title" id="detail-title"></span>
+    <button class="detail-fav" id="detail-fav-btn" onclick="toggleFavDetail()"></button>
+    <button class="detail-edit" onclick="addRecipeToGrocery(viewingId)" style="background:rgba(255,255,255,0.2)">🛒</button>
+    <button class="detail-edit" onclick="openEditForm()">Edit</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<!-- SCREEN: ADD/EDIT FORM -->
+<div class="screen" id="screen-form">
+  <div class="detail-header">
+    <button class="back-btn" onclick="cancelForm()">✕</button>
+    <span class="detail-title" id="form-title">Add Recipe</span>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">🔗 Import from URL</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Paste a link to any recipe website and we'll pull in all the details automatically.</p>
+    <div class="url-fetch-row">
+      <input type="text" id="url-input" placeholder="https://www.allrecipes.com/recipe/...">
+      <button class="fetch-btn" id="fetch-btn" onclick="fetchFromUrl()">Fetch</button>
+    </div>
+    <div id="fetch-status" style="display:none" class="fetch-status"></div>
+    <div id="no-api-hint" style="display:none" class="no-api-hint">No API key set yet. Go to <strong>Settings tab</strong> to add your free Spoonacular key.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Paste Recipe Text</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Paste from an AI app, friend's message, or copied webpage. We'll auto-fill the fields.</p>
+    <div class="paste-area">
+      <textarea id="paste-input" rows="4" placeholder="Paste any recipe text here..."></textarea>
+      <button class="parse-btn" onclick="parseRecipe()">✨ Auto-fill from pasted text</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📸 Upload Recipe Screenshots</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Upload one or more screenshots of a recipe. Text will be read automatically and fields filled in. Screenshots are saved with the recipe.</p>
+    <div class="screenshot-grid" id="screenshot-thumbs"></div>
+    <button class="screenshot-upload-btn" onclick="document.getElementById('screenshot-input').click()">
+      <span style="font-size:20px">📷</span> Add screenshot(s)
+    </button>
+    <input type="file" id="screenshot-input" accept="image/*" multiple style="display:none" onchange="handleScreenshots(event)">
+    <div id="ocr-status" style="display:none" class="ocr-status"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Recipe Details</div>
+    <div class="field-lbl">Recipe name *</div>
+    <input type="text" id="f-name" placeholder="e.g. Gentle chicken soup" oninput="autoTagFromContent()">
+    <div class="field-lbl">Source (website URL or friend's name)</div>
+    <input type="text" id="f-source" placeholder="e.g. https://... or Aunt Maria">
+    <div class="field-row" style="margin-top:14px">
+      <div>
+        <div class="field-lbl" style="margin-top:0">Prep time</div>
+        <input type="text" id="f-prep" placeholder="e.g. 15 mins">
+      </div>
+      <div>
+        <div class="field-lbl" style="margin-top:0">Cook time</div>
+        <input type="text" id="f-cook" placeholder="e.g. 30 mins">
+      </div>
+      <div>
+        <div class="field-lbl" style="margin-top:0">Servings</div>
+        <input type="text" id="f-servings" placeholder="e.g. 4">
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+    <div class="card-title">Ingredients</div>
+    <div class="ing-list" id="ing-list"></div>
+    <button class="add-row-btn" onclick="addIngredientRow()">+ Add ingredient</button>
+    <div id="scd-live-warning" style="display:none;margin-top:10px;background:#fee2e2;color:#991b1b;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.6"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Instructions</div>
+    <div class="steps-list" id="steps-list"></div>
+    <button class="add-row-btn" onclick="addStepRow()">+ Add step</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tags</div>
+    <div id="auto-tag-hint" style="display:none;font-size:12px;color:var(--good-text);background:var(--good);padding:6px 10px;border-radius:8px;margin-bottom:8px;font-weight:500"></div>
+    <div class="field-lbl" style="margin-top:0">Dietary tags</div>
+    <div class="tag-grid" id="crohns-tags"></div>
+    <div class="field-lbl">Custom tags</div>
+    <div class="tag-grid" id="custom-tags-display"></div>
+    <div id="saved-custom-tags" style="display:none;margin-bottom:8px"></div>
+    <div class="custom-tag-row">
+      <input type="text" id="custom-tag-input" placeholder="Add your own tag..." onkeydown="if(event.key==='Enter'){addCustomTag();event.preventDefault();}">
+      <button onclick="addCustomTag()">Add</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">My Notes & Modifications</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Your personal space — modifications, substitutions, what worked, what to avoid, family feedback.</p>
+    <textarea id="f-notes" rows="5" placeholder="e.g. Used almond flour instead of regular flour. Kids loved it. Skip the onions next time..."></textarea>
+  </div>
+
+  <div class="form-actions">
+    <button class="btn-cancel" onclick="cancelForm()">Cancel</button>
+    <button class="btn-save" onclick="saveRecipe()">Save Recipe</button>
+  </div>
+</div>
+
+<!-- SCREEN: SHARE -->
+<div class="screen" id="screen-share">
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">🔑 Spoonacular API Key</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Enter your free Spoonacular API key to enable importing recipes from any website URL. Your key stays on this device only — never shared anywhere.</p>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:500">Status:</span>
+      <span class="api-status-badge unset" id="api-status-badge">Not set</span>
+    </div>
+    <div class="api-key-row">
+      <input type="password" id="api-key-input" placeholder="Paste your Spoonacular API key here">
+      <button onclick="saveApiKey()">Save</button>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">Get a free key at <strong>spoonacular.com/food-api</strong> → Sign Up → copy from your Profile dashboard.</p>
+    <div id="api-key-msg"></div>
+  </div>
+
+  <div class="card" style="margin-top:12px">
+    <div class="card-title">🧹 Fix Substitute Suggestions</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">If ingredients are showing wrong substitutes (e.g. honey for flour or salt), tap this to reset. Your recipes are not affected.</p>
+      <button onclick="clearSubstituteLibrary()" style="width:100%;padding:12px;background:#fee2e2;color:#991b1b;border:1.5px solid #fca5a5;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">🗑️ Reset substitute suggestions</button>
+      <div id="sub-clear-status" style="display:none;margin-top:8px;font-size:13px;color:#065f46;background:#d1fae5;padding:8px 12px;border-radius:8px;font-weight:600">✓ Done — tap Edit on any recipe to see correct substitutes.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 My Substitute Library</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Add your own ingredient substitutes. These will be suggested automatically when adding new recipes.</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <input id="sub-ing-input" type="text" placeholder="Ingredient (e.g. maple syrup)" style="flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px">
+        <span style="align-self:center;color:var(--muted);font-size:16px">→</span>
+        <input id="sub-alt-input" type="text" placeholder="Substitute (e.g. pure honey)" style="flex:1;padding:9px 12px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px">
+        <button onclick="addManualSubstitute()" style="padding:9px 14px;background:var(--accent2);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer">Add</button>
+      </div>
+      <div id="sub-library-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📤 Export & Share</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Export all recipes as a file. Share via iMessage, WhatsApp, or email. Import on another device to sync.</p>
+    <button class="share-btn share-export" onclick="exportData()">📤 Export All Recipes</button>
+    <button class="share-btn share-import" onclick="document.getElementById('import-file').click()">📥 Import Recipes from File</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    <div id="share-msg"></div>
+  </div>
+  <div class="install-hint">
+    📱 <strong>Add to home screen:</strong> In Safari, tap the Share button → "Add to Home Screen" to use this like a regular app — even offline.
+  </div>
+</div>
+
+<!-- NAV -->
+<!-- SCREEN: GROCERY LIST -->
+<div class="screen" id="screen-grocery">
+  <div style="padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between">
+    <div style="font-size:18px;font-weight:700">🛒 Grocery List</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm" onclick="clearCheckedGrocery()" style="font-size:12px">Clear checked</button>
+      <button class="btn-sm btn-danger" onclick="clearAllGrocery()" style="font-size:12px">Clear all</button>
+    </div>
+  </div>
+  <!-- Recipe filter toggles -->
+  <div id="grocery-recipe-filters" style="padding:0 16px 8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+  <!-- View mode toggle -->
+  <div style="padding:0 16px 8px;display:flex;gap:6px">
+    <button class="fchip active" id="view-by-category" onclick="setGroceryView('category')">By category</button>
+    <button class="fchip" id="view-by-recipe" onclick="setGroceryView('recipe')">By recipe</button>
+  </div>
+  <div id="grocery-list-container" style="padding:0 16px 12px"></div>
+</div>
+
+<nav class="nav" id="main-nav">
+  <button class="nav-item active" id="nav-browse" onclick="showScreen('browse')">
+    <span class="nav-icon">🍽️</span><span>Recipes</span>
+  </button>
+  <button class="nav-item" id="nav-favs" onclick="showScreen('favs')">
+    <span class="nav-icon">❤️</span><span>Favorites</span>
+  </button>
+  <button class="nav-item" id="nav-grocery" onclick="showScreen('grocery')">
+    <span class="nav-icon">🛒</span><span>Grocery</span>
+  </button>
+<button class="nav-item" id="nav-share" onclick="showScreen('share')">
+    <span class="nav-icon">⚙️</span><span>Settings</span>
+  </button>
+</nav>
+
+<script>
+const SK = 'rj_v2';
+const CROHNS_TAGS = ['Dairy-free','Nut-free'];
+
+let S = { theme: 'colorful', recipes: [] };
+let activeFilter = 'all';
+let viewingId = null;
+let editingId = null;
+let formCustomTags = [];
+let formSelCrohnsTags = [];
+let formAutoTags = new Set();
+let formScreenshots = []; // tracks which tags were auto-suggested this session
+let prevScreen = 'browse';
+
+const DEFAULT_CUSTOM_TAGS = ['Almond Flour','Eggplant','Cauliflower','Vegetables','Zucchini','Indian','Curries','Dry curries','Bread','Cookies','Chocolate','Soup','Salad','Snack','Dessert'];
+
+function loadState() {
+  try { const r = localStorage.getItem(SK); if(r) S = JSON.parse(r); } catch(e) {}
+  if (!S.recipes) S.recipes = [];
+  if (!S.globalCustomTags || S.globalCustomTags.length === 0) {
+    S.globalCustomTags = [...DEFAULT_CUSTOM_TAGS];
+  } else {
+    DEFAULT_CUSTOM_TAGS.forEach(t => { if(!S.globalCustomTags.includes(t)) S.globalCustomTags.unshift(t); });
+  }
+  if (!S.tagCounts) S.tagCounts = {};
+  if (!S.groceryList) S.groceryList = [];
+  if (!S.groceryActiveRecipes) S.groceryActiveRecipes = null;
+  if (!S.substituteLibrary) S.substituteLibrary = {};
+  // Migration: wipe any substitute library entries that are single words (from old buggy
+  // word-splitting code). Real ingredient keys always have at least 2 words OR are a
+  // specific known multi-char ingredient like "salt", "honey" etc.
+  // The safest approach: clear the whole derived library and keep only S.substituteLibrary
+  // entries that look like real stripped ingredient names (contain a space OR are 6+ chars)
+  // Clear the entire substitute library — the old buggy word-splitting code
+  // filled it with incorrect entries (e.g. "lemon zest" -> "pure honey").
+  // autoFillSubstitutes still works via the SCD_ILLEGAL_MAP directly.
+  // Users can re-tap "Use this" on any ingredient to rebuild their personal library.
+  if(!S._subLibCleaned) {
+    S.substituteLibrary = {};
+    S._subLibCleaned = true;
+  }
+  // v2: re-run ingredient alt cleaning to fix almond milk / coconut milk corruption
+  if(S._ingAltsCleaned !== 2) {
+    cleanIngredientAlts();
+    S._ingAltsCleaned = 2;
+    saveState();
+  }
+}
+
+function saveState() {
+  try { localStorage.setItem(SK, JSON.stringify(S)); } catch(e) {
+    alert('Storage full. Please export your recipes from the Share tab.');
+  }
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleTheme() {
+  S.theme = S.theme === 'colorful' ? 'clean' : 'colorful';
+  applyTheme(); saveState();
+}
+function applyTheme() {
+  document.body.className = 'theme-' + S.theme;
+  document.getElementById('theme-btn').textContent = S.theme === 'colorful' ? 'Clean Mode' : 'Color Mode';
+  document.getElementById('topbar-title').textContent = S.theme === 'colorful' ? '🍽️ Recipe Journal' : 'Recipe Journal';
+  const grad = 'linear-gradient(135deg, #c026d3, #7c3aed)';
+  const topbar = document.getElementById('main-topbar');
+  const detailHeaders = document.querySelectorAll('.detail-header');
+  if(S.theme === 'colorful') {
+    if(topbar) topbar.style.background = grad;
+    detailHeaders.forEach(h => h.style.background = grad);
+  } else {
+    if(topbar) topbar.style.background = '';
+    detailHeaders.forEach(h => h.style.background = '');
+  }
+}
+
+// ---- NAVIGATION ----
+function showScreen(name) {
+  ['browse','favs','grocery','share'].forEach(s => {
+    document.getElementById('screen-'+s).className = 'screen'+(s===name?' active':'');
+    const nb = document.getElementById('nav-'+s);
+    if(nb) nb.className = 'nav-item'+(s===name?' active':'');
+  });
+  document.getElementById('screen-detail').className = 'screen';
+  document.getElementById('screen-form').className = 'screen';
+  document.getElementById('main-topbar').style.display = '';
+  document.getElementById('main-nav').style.display = '';
+  if(name==='favs') renderFavs();
+  if(name==='browse') renderBrowse();
+  if(name==='share') { updateApiStatusBadge(); renderSubLibraryList(); }
+  if(name==='grocery') renderGroceryList();
+  // Reset select mode when leaving browse
+  if(name!=='browse' && selectMode) {
+    selectMode=false; selectedRecipeIds=new Set();
+    const btn=document.getElementById('select-mode-btn');
+    const bar=document.getElementById('select-bar');
+    if(btn){btn.textContent='Select';btn.style.background='';btn.style.color='';}
+    if(bar) bar.style.display='none';
+  }
+}
+
+function showDetail(id) {
+  prevScreen = getCurrentScreen();
+  viewingId = id;
+  document.getElementById('screen-detail').className = 'screen active';
+  ['browse','favs','share'].forEach(s => document.getElementById('screen-'+s).className = 'screen');
+  document.getElementById('screen-form').className = 'screen';
+  document.getElementById('main-topbar').style.display = 'none';
+  document.getElementById('main-nav').style.display = 'none';
+  renderDetail(id);
+}
+
+function showForm() {
+  document.getElementById('screen-form').className = 'screen active';
+  ['browse','favs','share','detail'].forEach(s => { const el = document.getElementById('screen-'+s); if(el) el.className = 'screen'; });
+  document.getElementById('main-topbar').style.display = 'none';
+  document.getElementById('main-nav').style.display = 'none';
+  updateUrlFetchHint();
+}
+
+function getCurrentScreen() {
+  if (document.getElementById('screen-browse').className.includes('active')) return 'browse';
+  if (document.getElementById('screen-favs').className.includes('active')) return 'favs';
+  return 'browse';
+}
+
+function goBack() {
+  document.getElementById('main-topbar').style.display = '';
+  document.getElementById('main-nav').style.display = '';
+  document.getElementById('screen-detail').className = 'screen';
+  document.getElementById('screen-'+prevScreen).className = 'screen active';
+  ['browse','favs','share'].forEach(s => {
+    const nb = document.getElementById('nav-'+s);
+    if(nb) nb.className = 'nav-item' + (s===prevScreen?' active':'');
+  });
+  if (prevScreen==='browse') renderBrowse();
+  if (prevScreen==='favs') renderFavs();
+}
+
+function cancelForm() {
+  document.getElementById('main-topbar').style.display = '';
+  document.getElementById('main-nav').style.display = '';
+  document.getElementById('screen-form').className = 'screen';
+  if (viewingId && editingId) {
+    document.getElementById('screen-detail').className = 'screen active';
+    renderDetail(viewingId);
+  } else {
+    document.getElementById('screen-browse').className = 'screen active';
+    renderBrowse();
+  }
+}
+
+// ---- BROWSE ----
+function allTags() {
+  const tags = new Set(['all','favorites']);
+  S.recipes.forEach(r => {
+    (r.crohnsTags||[]).forEach(t => tags.add(t));
+    (r.customTags||[]).forEach(t => tags.add(t));
+  });
+  return [...tags];
+}
+
+function renderFilterBar() {
+  const fb = document.getElementById('filter-bar');
+  const tags = allTags();
+  fb.innerHTML = tags.map(t => `<button class="fchip${activeFilter===t?' active':''}" onclick="setFilter('${esc(t)}')">${t==='all'?'All recipes':t==='favorites'?'❤️ Favorites':esc(t)}</button>`).join('');
+}
+
+function setFilter(t) { activeFilter = t; renderBrowse(); }
+
+function renderBrowse() {
+  renderFilterBar();
+  const q = (document.getElementById('search-input').value||'').toLowerCase();
+  let recipes = S.recipes.filter(r => {
+    if (q && !r.name.toLowerCase().includes(q) && !(r.notes||'').toLowerCase().includes(q) && !(r.ingredients||[]).some(i=>i.name.toLowerCase().includes(q))) return false;
+    if (activeFilter === 'all') return true;
+    if (activeFilter === 'favorites') return r.fav;
+    return (r.crohnsTags||[]).includes(activeFilter) || (r.customTags||[]).includes(activeFilter);
+  });
+  const g = document.getElementById('recipes-grid');
+  if (!recipes.length) {
+    g.innerHTML = `<div class="empty"><div class="empty-icon">${S.recipes.length?'🔍':'📖'}</div><div class="empty-title">${S.recipes.length?'No recipes found':'Your recipe journal is empty'}</div><div class="empty-sub">${S.recipes.length?'Try a different search or filter':'Tap + Add to get started'}</div></div>`;
+    return;
+  }
+  g.innerHTML = recipes.map(r => recipeCardHtml(r)).join('');
+}
+
+function recipeCardHtml(r) {
+  const allTags = [...(r.crohnsTags||[]).map(t=>`<span class="rtag crohns">${esc(t)}</span>`), ...(r.customTags||[]).map(t=>`<span class="rtag custom">${esc(t)}</span>`)].join('');
+  const meta = [r.prepTime?`⏱ Prep: ${esc(r.prepTime)}`:'', r.cookTime?`🍳 Cook: ${esc(r.cookTime)}`:'', r.servings?`🍽 ${esc(r.servings)} servings`:''].filter(Boolean).map(m=>`<span class="meta-pill">${m}</span>`).join('');
+  return `<div class="recipe-card" onclick="showDetail('${r.id}')">
+    <div class="recipe-card-top">
+      <span class="recipe-name">${esc(r.name)}</span>
+      <button class="fav-btn" onclick="event.stopPropagation();toggleFav('${r.id}')">${r.fav?'❤️':'🤍'}</button>
+    </div>
+    ${meta?`<div class="recipe-meta">${meta}</div>`:''}
+    ${allTags?`<div class="recipe-tags">${allTags}</div>`:''}
+    ${r.notes?`<div class="recipe-note-preview">${esc(r.notes)}</div>`:''}
+    ${(()=>{
+  const fl=checkSCDIngredients(r.ingredients||[]);
+  if(!fl.length) return '';
+  const illegal=fl.filter(f=>!f.modified);
+  const modified=fl.filter(f=>f.modified);
+  let out='';
+  if(illegal.length) out+=`<div style="margin-top:8px;background:#fee2e2;border-radius:10px;padding:8px 10px">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">⚠️ SCD-ILLEGAL</div>
+    ${illegal.map(f=>`<div style="margin-top:6px">
+      <div style="font-size:12px;color:#991b1b">⚠️ ${highlightKeywordWithQty(f.name,f.strippedName||f.name,f.matchedKeyword)}</div>
+      ${f.alt ? `<div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+        <span style="font-size:12px;color:#991b1b;flex:1">→ try: <em>${f.alt}</em></span>
+        <button onclick="event.stopPropagation();applySubstitute('${r.id}','${f.name}','${f.alt}')"
+          style="background:#fff;border:1.5px solid #fca5a5;color:#991b1b;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">
+          ✓ Use this
+        </button>
+      </div>` : ''}
+    </div>`).join('')}
+  </div>`;
+  if(modified.length) out+=`<div style="margin-top:6px;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:8px 10px">
+    <div style="font-size:11px;font-weight:700;color:#78350f;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px">✓ SCD-Legal — use with care</div>
+    ${modified.map(f=>`<div style="font-size:12px;color:#92400e;margin-top:3px">
+      <span style="font-weight:600">${highlightKeywordAmberWithQty(f.name,f.strippedName||f.name,f.matchedKeyword)}</span>${f.note?`<span style="color:#a16207"> — ${f.note}</span>`:''}
+    </div>`).join('')}
+  </div>`;
+  return out;
+})()}
+  </div>`;
+}
+
+function renderFavs() {
+  const g = document.getElementById('favs-grid');
+  const favs = S.recipes.filter(r=>r.fav);
+  if (!favs.length) { g.innerHTML = '<div class="empty"><div class="empty-icon">❤️</div><div class="empty-title">No favorites yet</div><div class="empty-sub">Tap the heart on any recipe to save it here</div></div>'; return; }
+  g.innerHTML = favs.map(r => recipeCardHtml(r)).join('');
+}
+
+function toggleFav(id) {
+  const r = S.recipes.find(x=>x.id===id);
+  if(r) { r.fav = !r.fav; saveState(); renderBrowse(); }
+}
+
+function toggleFavDetail() {
+  const r = S.recipes.find(x=>x.id===viewingId);
+  if(r) { r.fav = !r.fav; saveState(); renderDetail(viewingId); }
+}
+
+// ---- DETAIL ----
+function renderDetail(id) {
+  const r = S.recipes.find(x=>x.id===id);
+  if(!r) return;
+  document.getElementById('detail-title').textContent = r.name;
+  document.getElementById('detail-fav-btn').textContent = r.fav ? '❤️' : '🤍';
+
+  const meta = [
+    r.prepTime ? `<div class="detail-meta-item">⏱ Prep <strong>${esc(r.prepTime)}</strong></div>` : '',
+    r.cookTime ? `<div class="detail-meta-item">🍳 Cook <strong>${esc(r.cookTime)}</strong></div>` : '',
+    r.servings ? `<div class="detail-meta-item">🍽 <strong>${esc(r.servings)} servings</strong></div>` : ''
+  ].filter(Boolean).join('');
+
+  const tags = [...(r.crohnsTags||[]).map(t=>`<span class="rtag crohns">${esc(t)}</span>`), ...(r.customTags||[]).map(t=>`<span class="rtag custom">${esc(t)}</span>`)].join('');
+
+  const ings = (r.ingredients||[]).map(i => `
+    <div class="ingredient-item">
+      <div class="ingredient-name">${esc(i.name)}</div>
+      ${i.alt ? `<div class="ingredient-alt">Alternative: ${esc(i.alt)}</div>` : ''}
+    </div>`).join('');
+
+  const steps = (r.steps||[]).map((s,i) => `
+    <div class="step-item">
+      <div class="step-num">${i+1}</div>
+      <div class="step-text">${esc(s)}</div>
+    </div>`).join('');
+
+  document.getElementById('detail-body').innerHTML = `
+    ${meta ? `<div class="detail-meta-row">${meta}</div>` : ''}
+    ${(()=>{
+      const allTags = [...(r.crohnsTags||[]), ...(r.customTags||[])];
+      const manualTags = r.manualTags || [];
+      const autoTagsList = allTags.filter(t => !manualTags.includes(t));
+      if(!allTags.length) return '';
+      return `<div class="detail-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="detail-section-title" style="margin-bottom:0">Tags</div>
+          ${autoTagsList.length ? `<button onclick="clearAutoTags('${r.id}')"
+            style="font-size:11px;color:#991b1b;background:#fee2e2;border:none;border-radius:8px;padding:3px 10px;cursor:pointer;font-weight:600">
+            Clear auto-tags (${autoTagsList.length})
+          </button>` : '<span style="font-size:11px;color:var(--good-text);background:var(--good);padding:3px 8px;border-radius:8px;font-weight:600">All manual ✓</span>'}
+        </div>
+        <div class="recipe-tags">${allTags.map(t => {
+          const isAuto = !manualTags.includes(t);
+          const cls = CROHNS_TAGS.includes(t) ? 'crohns' : 'custom';
+          return `<span class="rtag ${cls}" style="${isAuto?'opacity:0.6;border-style:dashed':''}" title="${isAuto?'Auto-suggested':'Manually added'}">${esc(t)}${isAuto?' 〜':''}</span>`;
+        }).join('')}</div>
+      </div>`;
+    })()}
+    ${ings ? `<div class="detail-section"><div class="detail-section-title">Ingredients</div>${ings}</div>` : ''}
+    ${steps ? `<div class="detail-section"><div class="detail-section-title">Instructions</div>${steps}</div>` : ''}
+    ${r.notes ? `<div class="detail-section"><div class="detail-section-title">My Notes</div><div class="notes-box">${esc(r.notes)}</div></div>` : ''}
+    ${r.source ? `<div class="detail-section" style="padding-bottom:16px"><div class="detail-section-title">Source</div><a class="source-link" href="${esc(r.source)}" target="_blank">${esc(r.source)}</a></div>` : ''}
+    <div style="padding:16px">
+      <button onclick="deleteRecipe('${r.id}')" style="background:none;border:1.5px solid #fca5a5;color:#dc2626;border-radius:10px;padding:10px;width:100%;font-size:14px;font-weight:600;cursor:pointer">Delete Recipe</button>
+    </div>`;
+}
+
+function deleteRecipe(id) {
+  if(!confirm('Delete this recipe? This cannot be undone.')) return;
+  S.recipes = S.recipes.filter(r=>r.id!==id);
+  saveState();
+  goBack();
+}
+
+// ---- FORM ----
+function openAddForm() {
+  editingId = null;
+  document.getElementById('form-title').textContent = 'Add Recipe';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-source').value = '';
+  document.getElementById('f-prep').value = '';
+  document.getElementById('f-cook').value = '';
+  document.getElementById('f-servings').value = '';
+  document.getElementById('f-notes').value = '';
+  document.getElementById('paste-input').value = '';
+  formScreenshots = [];
+  renderScreenshotThumbs();
+  document.getElementById('ocr-status').style.display = 'none';
+  formCustomTags = [];
+  formSelCrohnsTags = [];
+  renderIngList([]);
+  renderStepsList([]);
+  renderCrohnsTags();
+  renderCustomTagsDisplay();
+  showForm();
+  const w = document.getElementById('scd-live-warning');
+  if(w) w.style.display='none';
+}
+
+function openEditForm() {
+  const r = S.recipes.find(x=>x.id===viewingId);
+  if(!r) return;
+  editingId = viewingId;
+  document.getElementById('form-title').textContent = 'Edit Recipe';
+  document.getElementById('f-name').value = r.name||'';
+  document.getElementById('f-source').value = r.source||'';
+  document.getElementById('f-prep').value = r.prepTime||'';
+  document.getElementById('f-cook').value = r.cookTime||'';
+  document.getElementById('f-servings').value = r.servings||'';
+  document.getElementById('f-notes').value = r.notes||'';
+  document.getElementById('paste-input').value = '';
+  formCustomTags = [...(r.customTags||[])];
+  formSelCrohnsTags = [...(r.crohnsTags||[])];
+  // Reset auto tracking — pre-mark tags not in manualTags as auto
+  formAutoTags = new Set();
+  const knownManual = r.manualTags || [];
+  [...(r.crohnsTags||[]), ...(r.customTags||[])].forEach(t => {
+    if(!knownManual.includes(t)) formAutoTags.add(t);
+  });
+  formScreenshots = [...(r.screenshots||[])];
+  renderScreenshotThumbs();
+  renderIngList(r.ingredients||[]);
+  renderStepsList(r.steps||[]);
+  renderCrohnsTags();
+  renderCustomTagsDisplay();
+  showForm();
+  setTimeout(runLiveSCDCheck, 150);
+}
+
+function renderIngList(ings) {
+  const l = document.getElementById('ing-list');
+  l.innerHTML = '';
+  if (!ings.length) { addIngredientRow(); return; }
+  ings.forEach(i => addIngredientRow(i.name, i.alt));
+  setTimeout(()=>{ runLiveSCDCheck(); autoTagFromContent(); }, 150);
+}
+
+function addIngredientRow(name='', alt='') {
+  const l = document.getElementById('ing-list');
+  const d = document.createElement('div');
+  d.className = 'ing-row';
+  d.innerHTML = `<div class="ing-row-fields">
+    <input type="text" placeholder="Ingredient name" value="${esc(name)}" class="ing-name" oninput="onIngNameInput(this)">
+    <input type="text" placeholder="Alternative (optional)" value="${esc(alt)}" class="ing-alt" oninput="onIngAltInput(this)">
+  </div>
+  <button class="remove-btn" onclick="this.parentElement.remove();runLiveSCDCheck()">✕</button>`;
+  l.appendChild(d);
+}
+
+function renderStepsList(steps) {
+  const l = document.getElementById('steps-list');
+  l.innerHTML = '';
+  if (!steps.length) { addStepRow(); return; }
+  steps.forEach(s => addStepRow(s));
+}
+
+function addStepRow(text='') {
+  const l = document.getElementById('steps-list');
+  const idx = l.children.length + 1;
+  const d = document.createElement('div');
+  d.className = 'step-row';
+  d.innerHTML = `<div class="step-row-num">${idx}</div>
+    <textarea rows="2" placeholder="Describe this step...">${esc(text)}</textarea>
+    <button class="remove-btn" style="margin-top:10px" onclick="removeStep(this)">✕</button>`;
+  l.appendChild(d);
+}
+
+function removeStep(btn) {
+  btn.parentElement.remove();
+  // renumber
+  document.querySelectorAll('.step-row-num').forEach((el,i) => el.textContent = i+1);
+}
+
+function renderCrohnsTags() {
+  const g = document.getElementById('crohns-tags');
+  g.innerHTML = CROHNS_TAGS.map(t => `<button class="tag-toggle${formSelCrohnsTags.includes(t)?' sel':''}" onclick="toggleCrohnsTag('${esc(t)}')">${esc(t)}</button>`).join('');
+}
+
+function toggleCrohnsTag(t) {
+  const i = formSelCrohnsTags.indexOf(t);
+  if(i>-1) { formSelCrohnsTags.splice(i,1); formAutoTags.delete(t); }
+  else { formSelCrohnsTags.push(t); formAutoTags.delete(t); } // manual add = not auto
+  renderCrohnsTags();
+}
+
+function renderCustomTagsDisplay() {
+  // Active tags with remove button
+  const g = document.getElementById('custom-tags-display');
+  g.innerHTML = formCustomTags.map(t=>`<span class="rtag custom" style="cursor:pointer" onclick="removeCustomTag('${esc(t)}')">${esc(t)} ✕</span>`).join('');
+  // Previously used tags (global pool minus already active)
+  const saved = document.getElementById('saved-custom-tags');
+  if(!saved) return;
+  const available = (S.globalCustomTags||[])
+    .filter(t=>!formCustomTags.includes(t))
+    .sort((a,b)=>((S.tagCounts||{})[b]||0)-((S.tagCounts||{})[a]||0));
+  if(available.length) {
+    saved.style.display='';
+    saved.innerHTML = '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:6px;margin-top:4px">Your tags — tap to add</div>'
+      + '<div class="tag-grid">' + available.map(t=>`<button class="tag-toggle" onclick="addExistingCustomTag('${esc(t)}')">${esc(t)}</button>`).join('') + '</div>';
+  } else {
+    saved.style.display='none';
+  }
+}
+function addExistingCustomTag(t) {
+  if(!formCustomTags.includes(t)){
+    formCustomTags.push(t);
+    formAutoTags.delete(t); // manually selected = not auto
+    S.tagCounts[t] = (S.tagCounts[t]||0) + 1;
+    saveState();
+    renderCustomTagsDisplay();
+  }
+}
+
+function addCustomTag() {
+  const inp = document.getElementById('custom-tag-input');
+  const val = inp.value.trim();
+  if(val && !formCustomTags.includes(val)) {
+    formCustomTags.push(val);
+    if(!S.globalCustomTags.includes(val)) S.globalCustomTags.push(val);
+    S.tagCounts[val] = (S.tagCounts[val]||0) + 1;
+    saveState();
+    renderCustomTagsDisplay();
+  }
+  inp.value = '';
+}
+
+function removeCustomTag(t) {
+  formCustomTags = formCustomTags.filter(x=>x!==t);
+  renderCustomTagsDisplay();
+}
+
+// ---- PASTE IMPORT ----
+function parseRecipe() {
+  const text = document.getElementById('paste-input').value.trim();
+  if(!text) return;
+  // Extract name (first non-empty line)
+  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
+  if(lines.length && !document.getElementById('f-name').value) {
+    document.getElementById('f-name').value = lines[0];
+  }
+  // Extract times
+  const prepMatch = text.match(/prep[^\d]*(\d+\s*(?:min|minute|hour|hr)s?)/i);
+  const cookMatch = text.match(/cook[^\d]*(\d+\s*(?:min|minute|hour|hr)s?)/i) || text.match(/total[^\d]*(\d+\s*(?:min|minute|hour|hr)s?)/i);
+  const servMatch = text.match(/serves?[:\s]+(\d+)|(\d+)\s*servings?/i);
+  if(prepMatch && !document.getElementById('f-prep').value) document.getElementById('f-prep').value = prepMatch[1];
+  if(cookMatch && !document.getElementById('f-cook').value) document.getElementById('f-cook').value = cookMatch[1];
+  if(servMatch && !document.getElementById('f-servings').value) document.getElementById('f-servings').value = servMatch[1]||servMatch[2];
+
+  // Try to find ingredients section
+  const ingSection = text.match(/ingredients?[:\s]*([\s\S]*?)(?:instructions?|directions?|method|steps?|$)/i);
+  if(ingSection) {
+    const ingUnitWords = ['cup','cups','tbsp','tsp','tablespoon','tablespoons','teaspoon','teaspoons',
+      'oz','ounce','ounces','lb','lbs','pound','pounds','gram','grams','g','kg','ml','l',
+      'pinch','dash','handful','clove','cloves','slice','slices','piece','pieces','bunch',
+      'can','cans','large','medium','small','fresh','frozen','dried','whole','chopped',
+      'minced','sliced','diced','grated','packed','heaped','level'];
+    // Words that indicate a line is NOT an ingredient even if it starts with a number
+    const nonIngredientSecondWords = ['serving','servings','tip','tips','note','notes',
+      'step','steps','benefit','benefits','reason','reasons','way','ways','option','options',
+      'minute','hour','day','week','month','calorie','calories','question','questions',
+      'comment','comments','review','reviews','photo','photos','image','images','video'];
+    const looksLikeIngredient = line => {
+      const t = line.trim();
+      if(!t || t.length < 2 || t.length > 100) return false;
+      const words = t.split(/\s+/);
+      const firstWord = words[0].toLowerCase();
+      const secondWord = (words[1]||'').toLowerCase();
+      // Reject if any word is a known blog-prose indicator
+      const proseWords = ['diabetes','nutrition','nutritional','health','benefit','benefits',
+        'information','frequently','asked','questions','leftovers','storage','storing',
+        'calories','calorie','protein','carbohydrate','subscribe','newsletter','comment',
+        'recipe','makes','yield','yields','author','adapted','source','originally',
+        'alternatively','additionally','furthermore','therefore','however','whenever'];
+      if(words.some(w => proseWords.includes(w.toLowerCase()))) return false;
+      // Reject if second word is a known non-ingredient word
+      if(nonIngredientSecondWords.includes(secondWord)) return false;
+      // Reject if line looks like a sentence (5+ words and no unit word at start)
+      if(words.length >= 6 && !ingUnitWords.includes(firstWord)) return false;
+      // Must start with a digit, fraction, or a known unit/descriptor word
+      if(/^[\d¼½¾⅓⅔⅛⅜⅝⅞]/.test(t)) return true;
+      if(ingUnitWords.includes(firstWord)) return true;
+      // Allow short lines with no quantity (≤4 words) — likely "salt", "olive oil" etc.
+      if(words.length <= 4 && !/[.!?]$/.test(t)) return true;
+      return false;
+    };
+    const ingLines = ingSection[1].split('\n')
+      .map(l => l.replace(/^[-•*◦▪▸→✓✗\d.]+\s*/, '').trim())
+      .filter(looksLikeIngredient);
+    if(ingLines.length) {
+      document.getElementById('ing-list').innerHTML = '';
+      ingLines.forEach(l => addIngredientRow(l.trim()));
+    }
+  }
+
+  // Try to find steps section
+  const stepSection = text.match(/(?:instructions?|directions?|method|steps?)[:\s]*([\s\S]*?)(?:notes?|tips?|nutrition|$)/i);
+  if(stepSection) {
+    const stepLines = stepSection[1].split('\n').map(l=>l.replace(/^[-•*\d.]+\s*/,'')).filter(l=>l.trim().length>10);
+    if(stepLines.length) {
+      document.getElementById('steps-list').innerHTML = '';
+      stepLines.forEach(l => addStepRow(l.trim()));
+    }
+  }
+
+  // Paste remaining as notes if no notes yet
+  if(!document.getElementById('f-notes').value) {
+    const notesMatch = text.match(/notes?[:\s]*([\s\S]*?)$/i);
+    if(notesMatch) document.getElementById('f-notes').value = notesMatch[1].trim();
+  }
+
+  document.getElementById('paste-input').value = '';
+  const btn = document.querySelector('.parse-btn');
+  btn.textContent = '✓ Fields filled! Review and adjust below.';
+  btn.style.background = '#10b981';
+  setTimeout(() => { btn.textContent = '✨ Auto-fill from pasted text'; btn.style.background = ''; }, 3000);
+}
+
+// ---- SAVE ----
+function saveRecipe() {
+  const name = document.getElementById('f-name').value.trim();
+  if(!name) { document.getElementById('f-name').focus(); return; }
+
+  const ingredients = [...document.querySelectorAll('.ing-row')].map(r => ({
+    name: r.querySelector('.ing-name').value.trim().replace(/[\s\)\(\]\[\*\#\@\!\?▢]+$/, '').trim(),
+    alt: r.querySelector('.ing-alt').value.trim()
+  })).filter(i=>i.name);
+
+  const steps = [...document.querySelectorAll('.step-row textarea')].map(t=>t.value.trim()).filter(Boolean);
+
+  // SCD Warning check
+  const flagged = checkSCDIngredients(ingredients);
+  const illegalFlagged = flagged.filter(f=>!f.modified);
+  if(illegalFlagged.length) {
+    const lines = illegalFlagged.map(f => f.alt ? '• '+f.name+' → try: '+f.alt : '• '+f.name);
+    const msg = '⚠️ SCD Warning\n\nThese ingredients may not be SCD-legal:\n' + lines.join('\n') + '\n\nSave anyway?';
+    if(!confirm(msg)) return;
+  }
+
+  const recipe = {
+    id: editingId || (Date.now().toString(36)+Math.random().toString(36).slice(2)),
+    name,
+    source: document.getElementById('f-source').value.trim(),
+    prepTime: document.getElementById('f-prep').value.trim(),
+    cookTime: document.getElementById('f-cook').value.trim(),
+    servings: document.getElementById('f-servings').value.trim(),
+    ingredients, steps,
+    screenshots: [...formScreenshots],
+    crohnsTags: [...formSelCrohnsTags],
+    customTags: [...formCustomTags],
+    manualTags: [...formSelCrohnsTags, ...formCustomTags].filter(t => !formAutoTags.has(t)),
+    // If editing old recipe with no manualTags, preserve all tags as manual
+    notes: document.getElementById('f-notes').value.trim(),
+    fav: editingId ? (S.recipes.find(r=>r.id===editingId)||{}).fav||false : false,
+    updatedAt: Date.now()
+  };
+
+  if(editingId) {
+    const i = S.recipes.findIndex(r=>r.id===editingId);
+    if(i>-1) S.recipes[i] = recipe;
+  } else {
+    S.recipes.unshift(recipe);
+  }
+
+  saveState();
+  viewingId = recipe.id;
+  editingId = null;
+  document.getElementById('main-topbar').style.display = 'none';
+  document.getElementById('main-nav').style.display = 'none';
+  document.getElementById('screen-form').className = 'screen';
+  document.getElementById('screen-detail').className = 'screen active';
+  renderDetail(recipe.id);
+}
+
+// ---- SHARE ----
+function exportData() {
+  const json = JSON.stringify(S, null, 2);
+  const blob = new Blob([json],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const ts = new Date().toISOString().split('T')[0];
+  a.href=url; a.download='recipe-journal-'+ts+'.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  document.getElementById('share-msg').innerHTML='<div class="msg ok">✓ Exported! Share via iMessage, WhatsApp, or save to iCloud.</div>';
+}
+
+function importData(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imp = JSON.parse(ev.target.result);
+      if(!imp.recipes || !Array.isArray(imp.recipes)) throw new Error('bad');
+      if(confirm('Merge imported recipes with your current ones? (Duplicates will be skipped)')) {
+        const existingIds = new Set(S.recipes.map(r=>r.id));
+        const newOnes = imp.recipes.filter(r=>!existingIds.has(r.id));
+        S.recipes = [...newOnes, ...S.recipes];
+        saveState(); renderBrowse();
+        document.getElementById('share-msg').innerHTML=`<div class="msg ok">✓ Imported ${newOnes.length} new recipe${newOnes.length!==1?'s':''}!</div>`;
+      }
+    } catch(err) {
+      document.getElementById('share-msg').innerHTML='<div class="msg err">❌ Could not read this file.</div>';
+    }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+
+// ---- API KEY ----
+const AK = 'rj_apikey';
+function getApiKey() { try { return localStorage.getItem(AK)||''; } catch(e){ return ''; } }
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if(!val) return;
+  try { localStorage.setItem(AK, val); } catch(e){}
+  document.getElementById('api-key-input').value = '';
+  updateApiStatusBadge();
+  document.getElementById('api-key-msg').innerHTML = '<div class="msg ok">✓ Key saved! You can now import recipes from URLs.</div>';
+  setTimeout(()=>{ document.getElementById('api-key-msg').innerHTML=''; }, 3000);
+}
+function updateApiStatusBadge() {
+  const b = document.getElementById('api-status-badge'); if(!b) return;
+  const key = getApiKey();
+  b.textContent = key ? 'Set ✓' : 'Not set';
+  b.className = 'api-status-badge ' + (key ? 'set' : 'unset');
+}
+
+// ---- URL FETCH ----
+function updateUrlFetchHint() {
+  const hint = document.getElementById('no-api-hint'); if(!hint) return;
+  hint.style.display = getApiKey() ? 'none' : '';
+  const btn = document.getElementById('fetch-btn'); if(btn) btn.disabled = !getApiKey();
+}
+
+async function fetchFromUrl() {
+  const url = document.getElementById('url-input').value.trim();
+  if(!url) { document.getElementById('url-input').focus(); return; }
+  const key = getApiKey();
+  if(!key) { document.getElementById('no-api-hint').style.display=''; return; }
+  const statusEl = document.getElementById('fetch-status');
+  const btn = document.getElementById('fetch-btn');
+  statusEl.style.display=''; statusEl.className='fetch-status loading'; statusEl.textContent='⏳ Fetching recipe...';
+  btn.disabled = true;
+  try {
+    const apiUrl = 'https://api.spoonacular.com/recipes/extract?url='+encodeURIComponent(url)+'&apiKey='+key+'&addRecipeInformation=true';
+    const res = await fetch(apiUrl);
+    if(!res.ok) {
+      if(res.status===401||res.status===403) throw new Error('Invalid API key. Check your key in Settings tab.');
+      if(res.status===402) throw new Error('Daily limit reached (150/day). Try again tomorrow.');
+      throw new Error('Could not fetch recipe ('+res.status+'). Try pasting the text instead.');
+    }
+    const data = await res.json();
+    if(data.title && !document.getElementById('f-name').value) document.getElementById('f-name').value = data.title;
+    if(!document.getElementById('f-source').value) document.getElementById('f-source').value = url;
+    if(data.readyInMinutes && !document.getElementById('f-cook').value) document.getElementById('f-cook').value = data.readyInMinutes+' mins';
+    if(data.preparationMinutes>0 && !document.getElementById('f-prep').value) document.getElementById('f-prep').value = data.preparationMinutes+' mins';
+    if(data.servings && !document.getElementById('f-servings').value) document.getElementById('f-servings').value = data.servings;
+    if(data.extendedIngredients && data.extendedIngredients.length) {
+      document.getElementById('ing-list').innerHTML = '';
+      data.extendedIngredients.forEach(ing => {
+        const amt = ing.amount ? (Number.isInteger(ing.amount)?ing.amount:parseFloat(ing.amount.toFixed(2))) : '';
+        addIngredientRow([amt, ing.unit, ing.name].filter(Boolean).join(' '));
+      });
+    }
+    let steps = [];
+    if(data.analyzedInstructions && data.analyzedInstructions.length) {
+      data.analyzedInstructions.forEach(block => { (block.steps||[]).forEach(s=>{ if(s.step) steps.push(s.step); }); });
+    }
+    if(steps.length) { document.getElementById('steps-list').innerHTML=''; steps.forEach(s=>addStepRow(s)); }
+
+    runLiveSCDCheck();
+    setTimeout(()=>{ autoFillSubstitutes(); autoTagFromContent(); }, 200);
+    statusEl.className='fetch-status ok'; statusEl.textContent='✓ Recipe imported! Review and edit below.';
+    document.getElementById('url-input').value='';
+  } catch(err) {
+    statusEl.className='fetch-status err'; statusEl.textContent='❌ '+err.message;
+  } finally { btn.disabled=false; }
+}
+
+
+
+function runLiveSCDCheck() {
+  const rows = [...document.querySelectorAll('.ing-row')];
+  // Reset all highlights first
+  rows.forEach(row => {
+    row.querySelector('.ing-name').style.borderColor = '';
+    row.querySelector('.ing-name').style.background = '';
+  });
+  const ingredients = rows.map(r=>({
+    name: r.querySelector('.ing-name').value.trim(),
+    alt: r.querySelector('.ing-alt').value.trim()
+  })).filter(i=>i.name);
+  const flagged = checkSCDIngredients(ingredients);
+  // Highlight flagged rows
+  rows.forEach(row => {
+    const name = row.querySelector('.ing-name').value.trim();
+    const alt = row.querySelector('.ing-alt').value.trim();
+    const match = flagged.find(f=>f.name===name);
+    if(match) {
+      if(match.modified) {
+        row.querySelector('.ing-name').style.borderColor = '#fcd34d';
+        row.querySelector('.ing-name').style.background = '#fffbeb';
+      } else if(!alt) {
+        row.querySelector('.ing-name').style.borderColor = '#fca5a5';
+        row.querySelector('.ing-name').style.background = '#fff5f5';
+      }
+    }
+  });
+  const w = document.getElementById('scd-live-warning');
+  if(!w) return;
+  const illegal = flagged.filter(f=>!f.modified);
+  const modified = flagged.filter(f=>f.modified);
+  if(flagged.length) {
+    w.style.display='';
+    let html = '';
+    if(illegal.length) html += '<div style="font-weight:700;color:#991b1b;margin-bottom:4px">⚠️ SCD-illegal:</div>' +
+      illegal.map(f=>`<div>• ${highlightKeywordWithQty(f.name, f.strippedName||f.name, f.matchedKeyword)}${f.alt?' — try: <em>'+f.alt+'</em>':''}</div>`).join('');
+    if(modified.length) html += `<div style="font-weight:700;color:#92400e;margin-top:${illegal.length?'8px':'0'};margin-bottom:4px">⚠️ Modified SCD (use with care):</div>` +
+      modified.map(f=>`<div style="color:#92400e;margin-top:2px"><span style="font-weight:600">${highlightKeywordAmberWithQty(f.name, f.strippedName||f.name, f.matchedKeyword)}</span>${f.note?` — ${f.note}`:''}</div>`).join('');
+    w.innerHTML = html;
+    w.style.background = illegal.length ? '#fee2e2' : '#fef9c3';
+    w.style.color = illegal.length ? '#991b1b' : '#92400e';
+  } else {
+    w.style.display='none';
+  }
+  autoSuggestTags();
+}
+
+// ---- SCD ILLEGAL LIST (source: breakingtheviciouscycle.info) ----
+const SCD_ILLEGAL_MAP = [
+  {k:'acacia', alt:'omit or use gelatin'},
+  {k:'agar', alt:'unflavored gelatin'},
+  {k:'agave', alt:'pure honey'},
+  {k:'alfalfa', alt:null},
+  {k:'algae', alt:null}, {k:'spirulina', alt:null},
+  {k:'aloe', alt:null},
+  {k:'amaranth', alt:'almond flour'},
+  {k:'apple juice', alt:'fresh apple cider (no sugar added)'},
+  {k:'arrowroot', alt:'almond flour or coconut flour'},
+  {k:'astragalus', alt:null},
+  {k:'baking powder', alt:'baking soda only'},
+  {k:'barley', alt:'almond flour'},
+  {k:'bean flour', alt:'almond flour'},
+  {k:'bee pollen', alt:null},
+  {k:'beer', alt:'dry wine or gin'},
+  {k:'bhindi', alt:null}, {k:'okra', alt:null},
+  {k:'bitter gourd', alt:null},
+  {k:'bologna', alt:'homemade meat with no additives'},
+  {k:'bouillon', alt:'homemade bone broth'},
+  {k:'buckwheat', alt:'almond flour'},
+  {k:'bulgur', alt:'cauliflower rice'},
+  {k:'butter bean', alt:'navy beans (prepared per SCD)'},
+  {k:'buttermilk', alt:'SCD 24-hour homemade yogurt'},
+  {k:'cannellini', alt:null},
+  {k:'canned vegetable', alt:'fresh or frozen vegetables'},
+  {k:'canned meat', alt:'fresh or frozen meat'},
+  {k:'carob', alt:null},
+  {k:'carrageenan', alt:'unflavored gelatin'},
+  {k:'cellulose gum', alt:null},
+  {k:'cereal', alt:null},
+  {k:'chestnut flour', alt:'almond flour'},
+  {k:'chia', alt:'sesame seeds (after 3 months)'},
+  {k:'chickory', alt:null}, {k:'chicory', alt:null},
+  {k:'chickpea', alt:'navy beans or lentils (prepared per SCD)'},
+  {k:'milk chocolate', alt:'85%+ dark chocolate or unsweetened cacao'},
+  {k:'white chocolate', alt:'unsweetened cacao butter'},
+  {k:'sweetened chocolate', alt:'unsweetened dark chocolate'},
+  {k:'hot cocoa mix', alt:'unsweetened cocoa powder'},
+  {k:'cocoa mix', alt:'unsweetened cocoa powder'},
+  {k:'dutch process cocoa', alt:'unsweetened raw cacao powder'},
+  {k:'coconut aminos', alt:'tamari (wheat-free, after 3 months)'},
+  {k:'coconut sugar', alt:'pure honey'},
+  {k:'coconut nectar', alt:'pure honey'},
+  {k:'coconut palm sugar', alt:'pure honey'},
+  {k:'coconut sap', alt:'pure honey'},
+  {k:'coconut water', alt:'plain water'},
+  {k:'instant coffee', alt:'weak brewed coffee'},
+  {k:'coffee instant', alt:'weak brewed coffee'},
+  {k:'corn syrup', alt:'pure honey'},
+  {k:'cornstarch', alt:'almond flour'},
+  {k:'corn', alt:'cauliflower or squash'},
+  {k:'cottage cheese', alt:'dry curd cottage cheese (DCCC)'},
+  {k:'cream cheese', alt:'dripped SCD yogurt cheese'},
+  {k:'date sugar', alt:'pure honey'},
+  {k:'date syrup', alt:'pure honey'},
+  {k:'dried milk', alt:null},
+  {k:'durum', alt:'almond flour'},
+  {k:'fava bean', alt:null}, {k:'faba bean', alt:null},
+  {k:'fenugreek', alt:null},
+  {k:'flaxseed', alt:'sesame seeds (after 3 months)'},
+  {k:'flax seed', alt:'sesame seeds (after 3 months)'},
+  {k:'fructooligosaccharide', alt:null}, {k:'fos', alt:null},
+  {k:'fructose', alt:'pure honey'},
+  {k:'garbanzo', alt:'navy beans or lentils (prepared per SCD)'},
+  {k:'guar gum', alt:'unflavored gelatin'},
+  {k:'ice cream', alt:'homemade SCD ice cream'},
+  {k:'inulin', alt:null},
+  {k:'jaggery', alt:'pure honey'},
+  {k:'kefir', alt:'SCD 24-hour homemade yogurt'},
+  {k:'kudzu', alt:null}, {k:'kuzu', alt:null},
+  {k:'lactaid', alt:null},
+  {k:'licorice', alt:null},
+  {k:'maca', alt:null},
+  {k:'maltitol', alt:'pure honey'},
+  {k:'maltodextrin', alt:null},
+  {k:'mannitol', alt:null},
+  {k:'maple syrup', alt:'pure honey'},
+  {k:'margarine', alt:'butter or coconut oil'},
+  {k:'oat milk', alt:'homemade almond milk'},
+  {k:'rice milk', alt:'homemade almond milk'},
+  {k:'hemp milk', alt:'homemade almond milk'},
+  {k:'millet', alt:'almond flour or cauliflower rice'},
+  {k:'molasses', alt:'pure honey'},
+  {k:'mozzarella', alt:'cheddar or gouda (aged 30+ days)'},
+  {k:'msg', alt:'fresh herbs and spices'},
+  {k:'mung bean', alt:null},
+  {k:'oat', alt:'almond flour'},
+  {k:'pappadum', alt:null},
+  {k:'pasta', alt:'zucchini noodles or spaghetti squash'},
+  {k:'pea flour', alt:'almond flour'},
+  {k:'pectin', alt:'unflavored gelatin'},
+  {k:'pinto bean', alt:'navy beans or lentils (prepared per SCD)'},
+  {k:'plantain', alt:'ripe banana (black spots)'},
+  {k:'potato', alt:'cauliflower mash or butternut squash'},
+  {k:'sweet potato', alt:'butternut squash or pumpkin (fresh)'},
+  {k:'processed cheese', alt:'natural aged cheese (30+ days)'},
+  {k:'protein powder', alt:null},
+  {k:'quinoa', alt:'cauliflower rice or almond flour'},
+  {k:'rice bran', alt:null},
+  {k:'rice', alt:'cauliflower rice'},
+  {k:'ricotta', alt:'dry curd cottage cheese (DCCC)'},
+  {k:'rye', alt:'almond flour'},
+  {k:'seaweed', alt:null},
+  {k:'sorbitol', alt:'pure honey'},
+  {k:'sour cream', alt:'SCD 24-hour homemade yogurt'},
+  {k:'soy sauce', alt:'tamari (wheat-free, after 3 months)'},
+  {k:'soybean milk', alt:'homemade almond milk'},
+  {k:'soybean', alt:null}, {k:'soybeans', alt:null},
+  {k:'spelt', alt:'almond flour'},
+  {k:'splenda', alt:'pure honey or saccharin'},
+  {k:'sucralose', alt:'pure honey or saccharin'},
+  {k:'stevia', alt:'pure honey or saccharin'},
+  {k:'tapioca', alt:'almond flour'},
+  {k:'taro', alt:'cauliflower or butternut squash'},
+  {k:'tofu', alt:null},
+  {k:'tomato paste', alt:'fresh tomatoes cooked down'},
+  {k:'tomato puree', alt:'fresh tomatoes blended'},
+  {k:'tomato sauce', alt:'homemade sauce from fresh tomatoes'},
+  {k:'turbinado', alt:'pure honey'},
+  {k:'cane sugar', alt:'pure honey'},
+  {k:'raw sugar', alt:'pure honey'},
+  {k:'brown sugar', alt:'pure honey'},
+  {k:'white sugar', alt:'pure honey'},
+  {k:'granulated sugar', alt:'pure honey'},
+  {k:'powdered sugar', alt:'pure honey'},
+  {k:'icing sugar', alt:'pure honey'},
+  {k:'castor sugar', alt:'pure honey'},
+  {k:'sugar', alt:'pure honey'},
+  {k:'evaporated cane', alt:'pure honey'},
+  {k:'cane juice', alt:'pure honey'},
+  {k:'coconut cream', alt:'check label for no additives'},
+  {k:'breadcrumb', alt:'almond flour crumbs'},
+  {k:'bread crumb', alt:'almond flour crumbs'},
+  {k:'panko', alt:'almond flour crumbs'},
+  {k:'soy milk', alt:'homemade almond milk'},
+  {k:'vegetable oil', alt:'coconut oil or olive oil'},
+  {k:'canola', alt:'coconut oil or olive oil'},
+  {k:'vegetable shortening', alt:'coconut oil or butter'},
+  {k:'shortening', alt:'coconut oil or butter'},
+  {k:'condensed milk', alt:'SCD 24-hour homemade yogurt'},
+  {k:'evaporated milk', alt:'coconut milk (check labels)'},
+  {k:'cream of wheat', alt:'almond flour porridge'},
+  {k:'semolina', alt:'almond flour'},
+  {k:'polenta', alt:'cauliflower mash'},
+  {k:'grits', alt:'cauliflower rice'},
+  {k:'couscous', alt:'cauliflower rice'},
+  {k:'orzo', alt:'cauliflower rice'},
+  {k:'noodle', alt:'zucchini noodles or spaghetti squash'},
+  {k:'spaghetti', alt:'zucchini noodles or spaghetti squash'},
+  {k:'penne', alt:'zucchini noodles'},
+  {k:'lasagna', alt:'zucchini sheets'},
+  {k:'tortilla', alt:'SCD almond flour flatbread'},
+  {k:'bread', alt:'SCD almond flour bread'},
+  {k:'cracker', alt:'almond flour crackers'},
+  {k:'cereal', alt:null},
+  {k:'granola', alt:'SCD nut and seed mix with honey'},
+  {k:'oatmeal', alt:'almond flour porridge'},
+  {k:'porridge', alt:'almond flour porridge with honey'},
+  {k:'turnip', alt:'rutabaga'},
+  {k:'water chestnut', alt:'celery for crunch'},
+  {k:'wheat germ', alt:null},
+  {k:'wheat', alt:'almond flour or coconut flour'},
+  {k:'self-rising flour', alt:'almond flour + pinch of baking soda'},
+  {k:'all-purpose flour', alt:'almond flour or coconut flour'},
+  {k:'plain flour', alt:'almond flour or coconut flour'},
+  {k:'wild rice', alt:'cauliflower rice'},
+  {k:'xanthan gum', alt:'unflavored gelatin'},
+  {k:'xantham gum', alt:'unflavored gelatin'},
+  {k:'xylitol', alt:'pure honey'},
+  {k:'yam', alt:'butternut squash or pumpkin (fresh)'},
+  {k:'commercial yogurt', alt:'SCD 24-hour homemade yogurt'},
+  {k:'yucca', alt:null},
+  {k:'black eyed', alt:null},
+];
+
+// Modified/conditionally SCD-legal — shown with amber warning, not red
+const SCD_MODIFIED_MAP = [
+  {k:'almond flour', note:'SCD-legal but use in moderation; avoid until diarrhea stops'},
+  {k:'coconut flour', note:'SCD-legal; use in moderation'},
+  {k:'almond butter', note:'SCD-legal after 3 months symptom-free; must be pure'},
+  {k:'coconut oil', note:'SCD-legal; good for cooking'},
+  {k:'coconut butter', note:'SCD-legal'},
+  {k:'creamed coconut', note:'SCD-legal (unsweetened dehydrated)'},
+  {k:'sesame', note:'SCD-legal after 3 months symptom-free'},
+  {k:'tahini', note:'SCD-legal; must be pure sesame only'},
+  {k:'feta', note:'SCD-legal after 6 months of healing'},
+  {k:'peanut butter', note:'SCD-legal with no sugar added; plain only'},
+  {k:'peanut', note:'SCD-legal in shell after 6 months; avoid shelled peanuts'},
+  {k:'pine nut', note:'SCD-legal but hard to digest; try in small amounts after symptoms subside'},
+  {k:'miso', note:'SCD-legal after 3 months symptom-free; must be wheat-free'},
+  {k:'tamari', note:'SCD-legal after 3 months; must be wheat-free'},
+  {k:'apple cider vinegar', note:'SCD-legal only when clear with no visible mother'},
+  {k:'soy lecithin', note:'Derived from soy but considered SCD-legal in small amounts'},
+  {k:'cabbage', note:'SCD-legal but introduce slowly; avoid with active diarrhea'},
+  {k:'cauliflower', note:'SCD-legal but can be hard to digest; introduce cautiously'},
+];
+const SCD_SAFE_OVERRIDE = [
+  // Completely SCD-legal — no warning needed
+  // Multi-word phrases are matched as exact sub-phrases
+  // Single words are matched exactly or as whole words only
+  'almond milk', 'warm almond milk', 'cold almond milk', 'unsweetened almond milk',
+  'coconut milk', 'full fat coconut milk', 'unsweetened coconut milk',
+  'olive oil', 'extra virgin olive oil', 'avocado oil',
+  'vanilla extract', 'pure vanilla extract', 'vanilla',
+  'lemon zest', 'lemon juice', 'lime zest', 'lime juice', 'orange zest', 'orange juice',
+  'cinnamon', 'salt', 'sea salt', 'kosher salt', 'himalayan salt',
+  'egg', 'eggs', 'egg white', 'egg yolk', 'honey', 'pure honey', 'raw honey',
+  'walnuts', 'pecans', 'almonds', 'cashews', 'pistachios', 'macadamia',
+  'apple cider vinegar', 'balsamic vinegar', 'white vinegar',
+  'dairy-free butter', 'vegan butter', 'coconut butter',
+  'garlic', 'garlic powder', 'garlic cloves', 'minced garlic',
+  'ginger', 'turmeric', 'cumin', 'paprika', 'smoked paprika',
+  'oregano', 'basil', 'thyme', 'rosemary', 'parsley', 'cilantro', 'dill',
+  'pepper', 'black pepper', 'white pepper', 'nutmeg', 'cardamom', 'cloves',
+  'baking soda', 'cream of tartar',
+  'coconut cream', 'unsweetened coconut cream',
+  'raisins', 'dates', 'medjool dates',
+  'olives', 'kalamata',
+];
+
+
+
+// Strip leading quantity/measurement from ingredient name for matching purposes
+// e.g. "3 tablespoons maple syrup" -> "maple syrup"
+// e.g. "1/2 cup almond flour" -> "almond flour"
+const UNITS = ['tablespoon','tablespoons','tbsp','tsp','teaspoon','teaspoons',
+  'cup','cups','oz','ounce','ounces','lb','lbs','pound','pounds','gram','grams',
+  'g','kg','ml','l','litre','liter','litres','liters','pinch','dash','handful',
+  'slice','slices','piece','pieces','clove','cloves','bunch','can','cans',
+  'package','packages','pkg','strip','strips','sprig','sprigs','stalk','stalks',
+  'head','heads','sheet','sheets','stick','sticks','drop','drops','fl oz'];
+
+function stripQuantity(name) {
+  let s = name.trim();
+  s = s.replace(/^\d+([\/.\d]*)\s*/, '');
+  const firstWord = s.split(' ')[0].toLowerCase().replace(/[^a-z]/g,'');
+  if(UNITS.includes(firstWord)) {
+    s = s.split(' ').slice(1).join(' ').trim();
+  }
+  s = s.replace(/^\d+([\/.\d]*)\s*/, '');
+  // Strip trailing punctuation/symbols from paste import (e.g. "almond flour )")
+  s = s.replace(/[\s\)\(\]\[\*\#\@\!\?▢]+$/, '').trim();
+  return s.trim() || name.trim();
+}
+
+// Returns array of {name, strippedName, matchedKeyword, alt, modified} — skips illegal if alt already entered
+function checkSCDIngredients(ingredients) {
+  const illegalExclusions = {
+    'flour':       ['almond flour','coconut flour','self-rising flour','rice flour'],
+    'rice':        ['cauliflower rice','wild rice'],
+    'corn':        ['cauliflower corn','unicorn'],
+    'milk':        ['almond milk','coconut milk','buttermilk'],
+    'oat':         ['bloat'],
+    'sugar':       ['no sugar','sugar-free','without sugar'],
+    'bread':       ['flatbread','cornbread'],
+    'cocoa powder':['unsweetened cocoa powder','cacao powder','raw cacao','raw cocoa'],
+    'chocolate':   ['unsweetened chocolate','100% chocolate','baking chocolate','cacao nibs','dark chocolate'],
+  };
+  const flagged = [];
+  const sortedIllegal = [...SCD_ILLEGAL_MAP].sort((a,b) => b.k.length - a.k.length);
+  ingredients.forEach(ing => {
+    const name = (ing.name||'').toLowerCase();
+    const stripped = stripQuantity(name);
+    const hasAlt = (ing.alt||'').trim().length > 0;
+    // Skip if ingredient is in the safe override list
+    // Use word-boundary safe check: 'butter' should not match inside 'peanut butter'
+    // Match only if stripped equals safe OR stripped is exactly safe with prefix/suffix words
+    // (e.g. 'warm almond milk' matches 'almond milk', but 'peanut butter' doesn't match 'butter')
+    if(SCD_SAFE_OVERRIDE.some(safe => stripped === safe || stripped.includes(safe))) return;
+    if(!hasAlt) {
+      sortedIllegal.forEach(entry => {
+        const exclusions = illegalExclusions[entry.k] || [];
+        const isExcluded = exclusions.some(ex => stripped.includes(ex));
+        if(!isExcluded && stripped.includes(entry.k) && !flagged.find(f=>f.name===ing.name)) {
+          flagged.push({ name: ing.name, strippedName: stripQuantity(ing.name), matchedKeyword: entry.k, alt: entry.alt, modified: false });
+        }
+      });
+    }
+    const modifiedExclusions = {
+      'cauliflower': ['cauliflower rice','cauliflower mash'],
+    };
+    SCD_MODIFIED_MAP.forEach(entry => {
+      // Skip modified check if already in safe override
+      // Use word-boundary safe check: 'butter' should not match inside 'peanut butter'
+    // Match only if stripped equals safe OR stripped is exactly safe with prefix/suffix words
+    // (e.g. 'warm almond milk' matches 'almond milk', but 'peanut butter' doesn't match 'butter')
+    if(SCD_SAFE_OVERRIDE.some(safe => stripped === safe || stripped.includes(safe))) return;
+      const modExcl = modifiedExclusions[entry.k] || [];
+      const isModExcluded = modExcl.some(ex => stripped.includes(ex));
+      if(!isModExcluded && stripped.includes(entry.k) && !flagged.find(f=>f.name===ing.name)) {
+        flagged.push({ name: ing.name, strippedName: stripQuantity(ing.name), matchedKeyword: entry.k, alt: null, note: entry.note, modified: true });
+      }
+    });
+  });
+  return flagged;
+}
+
+// Helper: show only stripped ingredient name (no quantity) with keyword highlighted
+function highlightKeywordWithQty(fullName, strippedName, keyword) {
+  return highlightKeyword(strippedName || fullName, keyword);
+}
+function highlightKeywordAmberWithQty(fullName, strippedName, keyword) {
+  return highlightKeywordAmber(strippedName || fullName, keyword);
+}
+
+// Helper: highlight just the illegal keyword within the full ingredient name
+function highlightKeyword(fullName, keyword) {
+  if(!keyword) return esc(fullName);
+  const lower = fullName.toLowerCase();
+  const idx = lower.indexOf(keyword.toLowerCase());
+  if(idx === -1) return esc(fullName);
+  const before = fullName.slice(0, idx);
+  const match = fullName.slice(idx, idx + keyword.length);
+  const after = fullName.slice(idx + keyword.length);
+  return esc(before) + '<mark style="background:#fecaca;color:#991b1b;border-radius:3px;padding:0 2px;font-weight:700">' + esc(match) + '</mark>' + esc(after);
+}
+function highlightKeywordAmber(fullName, keyword) {
+  if(!keyword) return esc(fullName);
+  const lower = fullName.toLowerCase();
+  const idx = lower.indexOf(keyword.toLowerCase());
+  if(idx === -1) return esc(fullName);
+  const before = fullName.slice(0, idx);
+  const match = fullName.slice(idx, idx + keyword.length);
+  const after = fullName.slice(idx + keyword.length);
+  return esc(before) + '<mark style="background:#fde68a;color:#92400e;border-radius:3px;padding:0 2px;font-weight:700">' + esc(match) + '</mark>' + esc(after);
+}
+function checkSCDIngredients(ingredients) {
+  const flagged = [];
+  ingredients.forEach(ing => {
+    const name = (ing.name||'').toLowerCase();
+    const hasAlt = (ing.alt||'').trim().length > 0;
+    if(hasAlt) return; // user already entered an alternative — skip warning
+    SCD_ILLEGAL_MAP.forEach(entry => {
+      if(name.includes(entry.k) && !flagged.find(f=>f.name===ing.name)) {
+        flagged.push({ name: ing.name, alt: entry.alt });
+      }
+    });
+  });
+  return flagged;
+}
+
+
+// ---- AUTO TAG SUGGESTION ----
+
+
+// Given current ingredient list, suggest tags based on learned associations
+// Keyword rules for auto-tagging based on recipe name + ingredients
+const AUTO_TAG_RULES = [
+  // Dietary tags
+  { tags: ['Dairy-free'],   keywords: ['dairy-free','dairy free','no dairy','without dairy','vegan'] },
+  { tags: ['Nut-free'],     keywords: ['nut-free','nut free','no nuts','without nuts'] },
+  // Custom tags — match your pre-loaded list
+  { tags: ['Almond Flour'], keywords: ['almond flour'] },
+  { tags: ['Cauliflower'],  keywords: ['cauliflower'] },
+  { tags: ['Eggplant'],     keywords: ['eggplant','aubergine','brinjal'] },
+  { tags: ['Zucchini'],     keywords: ['zucchini','courgette'] },
+  { tags: ['Vegetables'],   keywords: ['vegetable','veggie','veg ','plant-based','plant based'] },
+  { tags: ['Indian'],       keywords: ['indian','masala','tikka','biryani','curry','dal','daal','sabzi','paneer','naan','roti','chapati','samosa','chutney','raita','korma','vindaloo','tandoori','bhaji','pakora','paratha'] },
+  { tags: ['Curries'],      keywords: ['curry','curries','masala','korma','vindaloo','tikka masala'] },
+  { tags: ['Dry curries'],  keywords: ['dry curry','dry curries','sukha','sabzi'] },
+];
+
+function autoTagFromContent() {
+  const recipeName = (document.getElementById('f-name').value||'').toLowerCase();
+  const ingredients = [...document.querySelectorAll('.ing-row')]
+    .map(row => (row.querySelector('.ing-name').value||'').toLowerCase().trim())
+    .filter(Boolean);
+
+  if(!ingredients.length && !recipeName) return;
+
+  const suggestedTags = new Set();
+
+  // Rule-based: check each keyword against INGREDIENTS only (not recipe name)
+  // Exception: cuisine/style tags (Indian, Curries) can also match recipe name
+  const CUISINE_TAGS = ['Indian','Curries','Dry curries'];
+
+// Ingredient-to-tag mapping: if a stripped ingredient name contains any of these
+// keywords, auto-create the tag (capitalized) and suggest it.
+// Only ingredients with a clear, specific identity qualify — not generic ones like salt, oil, water.
+const INGREDIENT_TAG_KEYWORDS = [
+  // Vegetables
+  'carrot','zucchini','eggplant','cauliflower','broccoli','spinach','kale','cabbage',
+  'beetroot','beet','asparagus','artichoke','celery','leek','fennel','pumpkin',
+  'butternut squash','squash','sweet potato','parsnip','turnip','radish','watercress',
+  'bok choy','brussels sprout','swiss chard','collard','okra','aubergine','brinjal',
+  'mushroom','tomato','avocado','corn','pea','green bean','edamame',
+  // Fruits
+  'apple','banana','mango','strawberry','blueberry','raspberry','blackberry',
+  'cherry','peach','pear','plum','apricot','fig','date','lemon','lime','orange',
+  'grapefruit','pineapple','papaya','watermelon','melon','grape','pomegranate',
+  'cranberry','lychee','passion fruit','kiwi','coconut',
+  // Proteins
+  'chicken','beef','lamb','pork','salmon','tuna','shrimp','prawn','cod','tilapia',
+  'turkey','duck','tofu','tempeh','lentil','chickpea','black bean','kidney bean',
+  'navy bean','white bean','peanut','almond','cashew','walnut','pecan','pistachio',
+  'hazelnut','macadamia','sunflower seed','pumpkin seed',
+  // Grains/Flours (SCD-legal ones)
+  'almond flour','coconut flour',
+  // Recipe types (matched against recipe name for cuisine/type tags)
+  'bread','muffin','cake','cookie','cookies','brownie','pie','tart','pudding',
+  'soup','stew','curry','salad','smoothie','pancake','waffle','pasta','pizza',
+  // Herbs & notable spices
+  'ginger','turmeric','cinnamon','cardamom','saffron','vanilla','basil','rosemary',
+  'thyme','oregano','mint','coriander','cilantro','parsley','dill','tarragon',
+  // Dairy/Eggs
+  'egg','cheese','yogurt','butter','cream',
+  // Other notable
+  'chocolate','cocoa','tahini','honey','maple','peanut butter','almond butter',
+];
+  AUTO_TAG_RULES.forEach(rule => {
+    const isCuisine = rule.tags.some(t => CUISINE_TAGS.includes(t));
+    const searchText = isCuisine
+      ? [recipeName, ...ingredients].join(' ')  // cuisine tags: check name + ingredients
+      : ingredients.join(' ');                   // all others: ingredients only
+    if(rule.keywords.some(kw => searchText.includes(kw))) {
+      rule.tags.forEach(t => suggestedTags.add(t));
+    }
+  });
+
+  // History-based tagging removed — rule-based AUTO_TAG_RULES handles all cases.
+  // History matching caused wrong suggestions (e.g. vanilla extract, maple syrup
+  // appearing in many recipes and pulling in unrelated tags like Cookies/Almond Flour).
+
+  // Ingredient-based auto-tagging: check ingredients AND recipe name
+  const recipeTypeKeywords = ['bread','muffin','cake','cookie','cookies','brownie',
+    'pie','tart','pudding','soup','stew','curry','salad','smoothie','pancake',
+    'waffle','pasta','pizza','snack','dessert'];
+  const nameToCheck = (document.getElementById('f-name').value||'').toLowerCase();
+  
+  // Check ingredients
+  ingredients.forEach(ing => {
+    const stripped = stripQuantity(ing);
+    INGREDIENT_TAG_KEYWORDS.forEach(kw => {
+      if(stripped.includes(kw)) {
+        const tag = kw.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        suggestedTags.add(tag);
+        if(!S.globalCustomTags.includes(tag)) {
+          S.globalCustomTags.push(tag);
+          if(!S.tagCounts[tag]) S.tagCounts[tag] = 0;
+          saveState();
+        }
+      }
+    });
+  });
+  
+  // Check recipe name for type-based tags (Bread, Cake, Soup, etc.)
+  recipeTypeKeywords.forEach(kw => {
+    if(nameToCheck.includes(kw)) {
+      const tag = kw.charAt(0).toUpperCase() + kw.slice(1);
+      suggestedTags.add(tag);
+      if(!S.globalCustomTags.includes(tag)) {
+        S.globalCustomTags.push(tag);
+        if(!S.tagCounts[tag]) S.tagCounts[tag] = 0;
+        saveState();
+      }
+    }
+  });
+
+  if(!suggestedTags.size) return;
+
+  let changed = false;
+  suggestedTags.forEach(tag => {
+    if(CROHNS_TAGS.includes(tag) && !formSelCrohnsTags.includes(tag)) {
+      formSelCrohnsTags.push(tag); formAutoTags.add(tag); changed = true;
+    }
+    if(S.globalCustomTags.includes(tag) && !formCustomTags.includes(tag)) {
+      formCustomTags.push(tag); formAutoTags.add(tag); changed = true;
+    }
+  });
+
+  if(changed) {
+    renderCrohnsTags();
+    renderCustomTagsDisplay();
+    const hint = document.getElementById('auto-tag-hint');
+    if(hint) {
+      hint.style.display='';
+      hint.textContent = "✨ Tags auto-selected — uncheck any that don't apply";
+      clearTimeout(hint._t);
+      hint._t = setTimeout(()=>{ hint.style.display='none'; }, 4000);
+    }
+  }
+}
+
+// Keep autoSuggestTags as alias called on ingredient change
+function autoSuggestTags() { autoTagFromContent(); }
+
+
+// ---- GROCERY LIST ----
+const GROCERY_CATEGORIES = {
+  produce: { label: '🥦 Produce', keywords: ['apple','apricot','avocado','banana','beet','berry','berries','broccoli','brussel','cabbage','carrot','cauliflower','celery','cherry','cilantro','cucumber','eggplant','fennel','fig','garlic','grapefruit','grape','kale','kiwi','leek','lemon','lettuce','lime','mango','melon','mint','mushroom','nectarine','onion','orange','parsley','peach','pear','peas','pepper','pineapple','plum','pumpkin','spinach','squash','tomato','zucchini','courgette','yam','bean','asparagus','artichoke','bok choy','watercress','radish','rhubarb','tangerine','watermelon','persimmon','dates','raisin','prune','coconut','plantain','tomatillo','jalapeno','chili','herbs'] },
+  meat: { label: '🥩 Meat & Fish', keywords: ['beef','chicken','lamb','pork','fish','salmon','tuna','shrimp','prawn','turkey','bacon','sausage','liver','kidney','shellfish','crab','lobster','cod','tilapia','sardine','anchovy','duck','veal','venison','bison','oxtail','tongue','poultry','seafood','meat'] },
+  dairy: { label: '🧀 Dairy & Eggs', keywords: ['egg','cheese','cheddar','gouda','brie','butter','ghee','yogurt','cream','milk','asiago','parmesan','mozzarella','swiss','havarti','colby','feta','manchego','camembert','stilton','gorgonzola','gruyere','romano','provolone','muenster'] },
+  nuts: { label: '🥜 Nuts & Seeds', keywords: ['almond','cashew','walnut','pecan','pistachio','macadamia','hazelnut','filbert','brazil nut','pine nut','sesame','sunflower seed','pumpkin seed','nut flour','almond flour','almond butter','tahini','peanut'] },
+  pantry: { label: '🫙 Pantry', keywords: ['oil','vinegar','honey','salt','pepper','spice','herb','cinnamon','nutmeg','oregano','thyme','cumin','turmeric','paprika','ginger','vanilla','baking soda','gelatin','cocoa','chocolate','coconut flour','coconut oil','olive oil','ghee','sauce','broth','stock','tomato','canned','dried','flour','sugar','juice','water','tea','coffee','wine','vinegar','mustard','pickle','capers','olives','soy','tamari','miso'] },
+  other: { label: '🛍️ Other', keywords: [] }
+};
+
+function categoriseIngredient(name) {
+  const n = (name||'').toLowerCase();
+  for(const [key, cat] of Object.entries(GROCERY_CATEGORIES)) {
+    if(key==='other') continue;
+    if(cat.keywords.some(k => n.includes(k))) return key;
+  }
+  return 'other';
+}
+
+function addRecipeToGrocery(recipeId) {
+  const r = S.recipes.find(x=>x.id===recipeId); if(!r) return;
+  (r.ingredients||[]).forEach(ing => {
+    if(!ing.name) return;
+    const exists = S.groceryList.find(i=>i.name.toLowerCase()===ing.name.toLowerCase() && i.recipeId===recipeId);
+    if(!exists) {
+      S.groceryList.push({
+        id: Date.now().toString(36)+Math.random().toString(36).slice(2),
+        name: ing.name, recipeId, recipeName: r.name,
+        category: categoriseIngredient(ing.name),
+        checked: false,
+        scdIllegal: (()=>{ const fl=checkSCDIngredients([{name:ing.name,alt:ing.alt||''}]); if(!fl.length) return false; return fl[0].modified?'modified':'illegal'; })()
+      });
+    }
+  });
+  S.groceryActiveRecipes = null; // reset so new recipe is active by default
+  saveState();
+  showScreen('grocery');
+}
+
+let selectMode = false;
+let selectedRecipeIds = new Set();
+let groceryViewMode = 'category';
+
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedRecipeIds = new Set();
+  const btn = document.getElementById('select-mode-btn');
+  const bar = document.getElementById('select-bar');
+  if(selectMode) {
+    btn.textContent = 'Cancel';
+    btn.style.background = '#fee2e2';
+    btn.style.color = '#991b1b';
+    bar.style.display = 'flex';
+  } else {
+    btn.textContent = 'Select';
+    btn.style.background = '';
+    btn.style.color = '';
+    bar.style.display = 'none';
+  }
+  renderBrowse();
+}
+
+function toggleRecipeSelect(id, e) {
+  e.stopPropagation();
+  if(selectedRecipeIds.has(id)) selectedRecipeIds.delete(id);
+  else selectedRecipeIds.add(id);
+  document.getElementById('select-count').textContent = selectedRecipeIds.size + ' selected';
+  renderBrowse();
+}
+
+function addSelectedToGrocery() {
+  if(!selectedRecipeIds.size) return;
+  selectedRecipeIds.forEach(id => {
+    const r = S.recipes.find(x=>x.id===id); if(!r) return;
+    (r.ingredients||[]).forEach(ing => {
+      if(!ing.name) return;
+      const exists = S.groceryList.find(i=>i.name.toLowerCase()===ing.name.toLowerCase() && i.recipeId===id);
+      if(!exists) {
+        S.groceryList.push({
+          id: Date.now().toString(36)+Math.random().toString(36).slice(2),
+          name: ing.name, recipeId: id, recipeName: r.name,
+          category: categoriseIngredient(ing.name),
+          checked: false,
+          scdIllegal: (()=>{ const fl=checkSCDIngredients([{name:ing.name,alt:ing.alt||''}]); if(!fl.length) return false; return fl[0].modified?'modified':'illegal'; })()
+        });
+      }
+    });
+  });
+  S.groceryActiveRecipes = null; // reset so all new recipes active
+  saveState();
+  toggleSelectMode();
+  showScreen('grocery');
+}
+
+function toggleGroceryItem(id) {
+  const item = S.groceryList.find(i=>i.id===id);
+  if(item) { item.checked = !item.checked; saveState(); renderGroceryList(); }
+}
+
+function clearCheckedGrocery() {
+  S.groceryList = S.groceryList.filter(i=>!i.checked);
+  saveState(); renderGroceryList();
+}
+
+function clearAllGrocery() {
+  if(!confirm('Clear the entire grocery list?')) return;
+  S.groceryList = []; saveState(); renderGroceryList();
+}
+
+function setGroceryView(mode) {
+  groceryViewMode = mode;
+  document.getElementById('view-by-category').className = 'fchip' + (mode==='category'?' active':'');
+  document.getElementById('view-by-recipe').className = 'fchip' + (mode==='recipe'?' active':'');
+  renderGroceryList();
+}
+
+function toggleGroceryRecipeFilter(recipeId) {
+  if(!S.groceryActiveRecipes) {
+    // First time — init with all recipes active
+    const all = [...new Set(S.groceryList.map(i=>i.recipeId))];
+    S.groceryActiveRecipes = all.filter(id=>id!==recipeId);
+  } else {
+    const idx = S.groceryActiveRecipes.indexOf(recipeId);
+    if(idx>-1) S.groceryActiveRecipes.splice(idx,1);
+    else S.groceryActiveRecipes.push(recipeId);
+  }
+  renderGroceryList();
+}
+
+function groceryItemHtml(item) {
+  return `<div class="grocery-item${item.checked?' checked':''}" onclick="toggleGroceryItem('${item.id}')">
+    <div class="grocery-check">${item.checked?'✓':''}</div>
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span class="grocery-name">${esc(item.name)}</span>
+        ${item.scdIllegal==='illegal'?'<span class="grocery-scd">⚠️ SCD-illegal</span>':item.scdIllegal==='modified'?'<span class="grocery-scd" style="background:#fef3c7;color:#92400e">〜 Modified SCD</span>':''}
+      </div>
+      ${groceryViewMode==='category'?`<div class="grocery-recipe">${esc(item.recipeName)}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderGroceryList() {
+  const c = document.getElementById('grocery-list-container');
+  const rf = document.getElementById('grocery-recipe-filters');
+
+  if(!S.groceryList.length) {
+    c.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><div class="empty-title">Your grocery list is empty</div><div class="empty-sub">Open a recipe and tap 🛒, or select multiple recipes from the Recipes tab</div></div>';
+    rf.innerHTML = '';
+    return;
+  }
+
+  // Get unique recipes in list
+  const recipeIds = [...new Set(S.groceryList.map(i=>i.recipeId))];
+  const recipeNames = {};
+  S.groceryList.forEach(i=>{ recipeNames[i.recipeId]=i.recipeName; });
+
+  // Init active recipes if null (all active by default)
+  if(S.groceryActiveRecipes===null) S.groceryActiveRecipes = [...recipeIds];
+  // Remove stale recipe ids no longer in list
+  S.groceryActiveRecipes = S.groceryActiveRecipes.filter(id=>recipeIds.includes(id));
+
+  // Render recipe filter toggles
+  rf.innerHTML = recipeIds.map(id => {
+    const active = S.groceryActiveRecipes.includes(id);
+    const checkedCount = S.groceryList.filter(i=>i.recipeId===id && i.checked).length;
+    const totalCount = S.groceryList.filter(i=>i.recipeId===id).length;
+    return `<button class="fchip${active?' active':''}" onclick="toggleGroceryRecipeFilter('${id}')">
+      ${esc(recipeNames[id])} <span style="opacity:0.7;font-size:11px">${checkedCount}/${totalCount}</span>
+    </button>`;
+  }).join('');
+
+  // Filter items by active recipes
+  const visible = S.groceryList.filter(i=>S.groceryActiveRecipes.includes(i.recipeId));
+
+  if(!visible.length) {
+    c.innerHTML = '<div style="padding:20px 0;text-align:center;color:var(--muted);font-size:14px">No items for selected recipes</div>';
+    return;
+  }
+
+  let html = '';
+
+  if(groceryViewMode === 'recipe') {
+    // Group by recipe
+    recipeIds.filter(id=>S.groceryActiveRecipes.includes(id)).forEach(id => {
+      const items = visible.filter(i=>i.recipeId===id);
+      if(!items.length) return;
+      const checked = items.filter(i=>i.checked).length;
+      html += `<div class="grocery-category" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🍽️ ${esc(recipeNames[id])}</span>
+        <span style="font-size:11px;font-weight:500">${checked}/${items.length} done</span>
+      </div>`;
+      items.forEach(item => { html += groceryItemHtml(item); });
+    });
+  } else {
+    // Group by category
+    const groups = {};
+    Object.keys(GROCERY_CATEGORIES).forEach(k=>groups[k]=[]);
+    visible.forEach(item=>{ (groups[item.category]||groups['other']).push(item); });
+    Object.entries(GROCERY_CATEGORIES).forEach(([key,cat]) => {
+      const items = groups[key]; if(!items||!items.length) return;
+      const checked = items.filter(i=>i.checked).length;
+      html += `<div class="grocery-category" style="display:flex;justify-content:space-between;align-items:center">
+        <span>${cat.label}</span>
+        <span style="font-size:11px;font-weight:500">${checked}/${items.length} done</span>
+      </div>`;
+      items.forEach(item=>{ html += groceryItemHtml(item); });
+    });
+  }
+  c.innerHTML = html;
+}
+
+
+
+// ---- PERSONAL SUBSTITUTE LIBRARY ----
+// Builds a lookup from all saved recipes: normalised ingredient -> user's substitute
+function buildSubstituteLibrary() {
+  const lib = {};
+  S.recipes.forEach(r => {
+    (r.ingredients||[]).forEach(ing => {
+      // Strip quantity before indexing so "3 tablespoons maple syrup" -> "maple syrup"
+      const name = stripQuantity((ing.name||'').toLowerCase().trim());
+      const alt = (ing.alt||'').trim();
+      // Only store if the alt is meaningful and the name is a real ingredient (not a unit)
+      if(name && name.length > 3 && alt) {
+        lib[name] = alt;
+      }
+    });
+  });
+  // Merge with saved library (user's saved library wins over derived)
+  return Object.assign({}, lib, S.substituteLibrary);
+}
+
+// Save a substitute to the personal library
+function saveToSubstituteLibrary(ingredientName, substitute) {
+  // Strip quantity before storing so "3 tablespoons maple syrup" -> "maple syrup"
+  const key = stripQuantity((ingredientName||'').toLowerCase().trim());
+  if(key && key.length > 2 && substitute) {
+    S.substituteLibrary[key] = substitute;
+    saveState();
+  }
+}
+
+// ---- AUTO SUBSTITUTE ----
+function findBestSubstitute(ingredientName) {
+  const name = stripQuantity((ingredientName||'').toLowerCase().trim());
+  if(!name) return '';
+
+  // 1. Personal substitute library — exact match on stripped name
+  const lib = buildSubstituteLibrary();
+  if(lib[name]) return lib[name];
+
+  // 2. SCD illegal map — same exclusions as checkSCDIngredients
+  const subExclusions = {
+    'flour':       ['almond flour','coconut flour','self-rising flour','rice flour'],
+    'rice':        ['cauliflower rice','wild rice'],
+    'corn':        ['cauliflower corn','unicorn'],
+    'milk':        ['almond milk','coconut milk','buttermilk'],
+    'oat':         ['bloat'],
+    'sugar':       ['no sugar','sugar-free','without sugar'],
+    'bread':       ['flatbread','cornbread'],
+    'cocoa powder':['unsweetened cocoa powder','cacao powder','raw cacao','raw cocoa'],
+    'chocolate':   ['unsweetened chocolate','100% chocolate','baking chocolate','cacao nibs','dark chocolate'],
+  };
+  // Sort by key length descending so specific keys (e.g. 'soy milk') match before generic ones (e.g. 'milk')
+  const sortedMap = [...SCD_ILLEGAL_MAP].sort((a,b) => b.k.length - a.k.length);
+  for(const entry of sortedMap) {
+    if(name.includes(entry.k) && entry.alt) {
+      const excl = subExclusions[entry.k] || [];
+      if(!excl.some(ex => name.includes(ex))) return entry.alt;
+    }
+  }
+
+  return '';
+}
+
+// Run auto-substitute on all ingredient rows that have no alt yet
+function autoFillSubstitutes() {
+  const rows = [...document.querySelectorAll('.ing-row')];
+  let filled = 0;
+  rows.forEach(row => {
+    const nameInput = row.querySelector('.ing-name');
+    const altInput = row.querySelector('.ing-alt');
+    const name = (nameInput.value||'').trim();
+    const alt = (altInput.value||'').trim();
+    if(!name || alt) return; // skip if no name or alt already filled
+    const suggested = findBestSubstitute(name);
+    if(suggested) {
+      altInput.value = suggested;
+      altInput.style.borderColor = '#fcd34d'; // amber highlight to show it was auto-filled
+      altInput.style.background = '#fffbeb';
+      altInput.title = 'Auto-suggested substitute';
+      filled++;
+    }
+  });
+  if(filled > 0) {
+    runLiveSCDCheck(); // re-run so highlighted warnings clear for auto-filled alts
+    const hint = document.getElementById('auto-tag-hint');
+    if(hint) {
+      hint.style.display='';
+      hint.textContent = `✨ ${filled} substitute${filled>1?'s':''} auto-suggested — edit or clear as needed`;
+      clearTimeout(hint._t);
+      hint._t = setTimeout(()=>{ hint.style.display='none'; }, 4000);
+    }
+  }
+}
+
+
+function onIngNameInput(el) {
+  runLiveSCDCheck();
+  clearTimeout(el._st);
+  el._st = setTimeout(function() {
+    var alt = el.parentElement.querySelector('.ing-alt');
+    if(!alt.value.trim()) {
+      var s = findBestSubstitute(el.value);
+      if(s) {
+        alt.value = s;
+        alt.style.borderColor = '#fcd34d';
+        alt.style.background = '#fffbeb';
+        runLiveSCDCheck();
+      }
+    }
+  }, 600);
+}
+
+function onIngAltInput(el) {
+  runLiveSCDCheck();
+  el.style.borderColor = '';
+  el.style.background = '';
+}
+
+
+function applySubstitute(recipeId, ingredientName, substitute) {
+  const r = S.recipes.find(x=>x.id===recipeId);
+  if(!r) return;
+  const ing = r.ingredients.find(i=>i.name===ingredientName);
+  if(!ing) return;
+  ing.alt = substitute;
+  saveToSubstituteLibrary(ingredientName, substitute);
+  saveState();
+  renderBrowse();
+  // If detail view is open for this recipe, re-render it
+  if(viewingId===recipeId) renderDetail(recipeId);
+}
+
+
+function clearAutoTags(recipeId) {
+  const r = S.recipes.find(x=>x.id===recipeId);
+  if(!r) return;
+  // If recipe has no manualTags tracking yet, it predates this feature
+  // Treat ALL its tags as manual — don't clear anything
+  if(!r.manualTags) {
+    alert('This recipe was saved before tag tracking was added. Open it, tap Edit, then Save to enable auto-tag tracking.');
+    return;
+  }
+  const manual = r.manualTags;
+  r.crohnsTags = (r.crohnsTags||[]).filter(t => manual.includes(t));
+  r.customTags = (r.customTags||[]).filter(t => manual.includes(t));
+  saveState();
+  renderBrowse();
+  if(viewingId===recipeId) renderDetail(recipeId);
+}
+
+// ---- SCREENSHOTS ----
+function renderScreenshotThumbs() {
+  const grid = document.getElementById('screenshot-thumbs');
+  if(!grid) return;
+  if(!formScreenshots.length) { grid.innerHTML=''; return; }
+  grid.innerHTML = formScreenshots.map((src,i) => `
+    <div class="screenshot-thumb">
+      <img src="${src}" onclick="viewScreenshot('${i}')">
+      <button class="del-btn" onclick="removeScreenshot(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeScreenshot(idx) {
+  formScreenshots.splice(idx, 1);
+  renderScreenshotThumbs();
+}
+
+function viewScreenshot(idx) {
+  const src = formScreenshots[idx];
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `<img src="${src}" style="max-width:100%;max-height:90vh;border-radius:10px;object-fit:contain">`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+async function handleScreenshots(e) {
+  const files = [...e.target.files];
+  if(!files.length) return;
+  const statusEl = document.getElementById('ocr-status');
+  statusEl.style.display = '';
+  statusEl.className = 'ocr-status loading';
+  statusEl.textContent = '⏳ Reading ' + files.length + ' screenshot' + (files.length>1?'s':'') + '...';
+
+  // Load images as base64 and add to formScreenshots
+  const newImages = await Promise.all(files.map(f => new Promise((res,rej) => {
+    const reader = new FileReader();
+    reader.onload = ev => res(ev.target.result);
+    reader.onerror = rej;
+    reader.readAsDataURL(f);
+  })));
+  formScreenshots.push(...newImages);
+  renderScreenshotThumbs();
+
+  // Run OCR on all images combined
+  try {
+    if(typeof Tesseract === 'undefined') {
+      // Load Tesseract.js dynamically
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
+    let allText = '';
+    for(let i=0; i<newImages.length; i++) {
+      statusEl.textContent = '⏳ Reading screenshot ' + (i+1) + ' of ' + newImages.length + '...';
+      const result = await Tesseract.recognize(newImages[i], 'eng', {
+        logger: () => {}
+      });
+      allText += result.data.text + '\n';
+    }
+
+    if(allText.trim()) {
+      // Dump raw text into paste box — let user review before auto-filling
+      document.getElementById('paste-input').value = allText.trim();
+      // Scroll to paste box so user sees it
+      const pasteEl = document.getElementById('paste-input');
+      pasteEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      pasteEl.focus();
+      statusEl.className = 'ocr-status ok';
+      statusEl.textContent = '✓ Text extracted — review it in the paste box below, clean up any garbage, then tap Auto-fill.';
+    } else {
+      statusEl.className = 'ocr-status err';
+      statusEl.textContent = '❌ Could not read text from screenshot. Try pasting the recipe instead.';
+    }
+  } catch(err) {
+    statusEl.className = 'ocr-status err';
+    statusEl.textContent = '❌ OCR failed: ' + err.message + '. Screenshots saved — try pasting text manually.';
+  }
+  e.target.value = '';
+}
+
+
+function viewScreenshotDetail(recipeId, idx) {
+  const r = S.recipes.find(x=>x.id===recipeId);
+  if(!r||!r.screenshots) return;
+  const src = r.screenshots[idx];
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = `<img src="${src}" style="max-width:100%;max-height:90vh;border-radius:10px;object-fit:contain">`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+
+function clearSubstituteLibrary() {
+  S.substituteLibrary = {};
+  S._subLibCleaned = true;
+  // Also clean corrupted alt fields from saved recipes
+  S._ingAltsCleaned = false;
+  cleanIngredientAlts();
+  S._ingAltsCleaned = 2;
+  saveState();
+  const status = document.getElementById('sub-clear-status');
+  if(status) {
+    status.style.display = '';
+    setTimeout(() => { status.style.display = 'none'; }, 3000);
+  }
+}
+
+
+// ---- SUBSTITUTE LIBRARY MANAGEMENT ----
+function addManualSubstitute() {
+  const ing = document.getElementById('sub-ing-input').value.trim().toLowerCase();
+  const alt = document.getElementById('sub-alt-input').value.trim();
+  if(!ing || !alt) {
+    alert('Please enter both an ingredient and a substitute.');
+    return;
+  }
+  const key = stripQuantity(ing);
+  if(!key) return;
+  S.substituteLibrary[key] = alt;
+  S._subLibCleaned = true;
+  saveState();
+  document.getElementById('sub-ing-input').value = '';
+  document.getElementById('sub-alt-input').value = '';
+  renderSubLibraryList();
+}
+
+function removeManualSubstitute(key) {
+  delete S.substituteLibrary[key];
+  saveState();
+  renderSubLibraryList();
+}
+
+function renderSubLibraryList() {
+  const el = document.getElementById('sub-library-list');
+  if(!el) return;
+  const entries = Object.entries(S.substituteLibrary||{});
+  if(!entries.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted);padding:4px 0">No custom substitutes yet.</div>';
+    return;
+  }
+  el.innerHTML = entries.map(([k,v]) => `
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <span style="flex:1;font-size:13px;font-weight:600">${esc(k)}</span>
+      <span style="color:var(--muted);font-size:13px">→</span>
+      <span style="flex:1;font-size:13px;color:var(--muted)">${esc(v)}</span>
+      <button onclick="removeManualSubstitute('${esc(k)}')" style="background:none;border:none;color:#dc2626;font-size:16px;cursor:pointer;padding:0 4px">✕</button>
+    </div>`).join('');
+}
+
+
+function cleanIngredientAlts() {
+  // Fix alt fields corrupted by old buggy autoFillSubstitutes.
+  // For legal/modified ingredients: clear any auto-fill alt.
+  // For illegal ingredients with wrong alt: replace with correct SCD substitute.
+  const suspiciousAlts = [
+    'pure honey','scd 24-hour homemade yogurt','homemade almond milk',
+    'almond flour','cauliflower rice','zucchini noodles or spaghetti squash',
+    'baking soda only','almond flour or coconut flour',
+    'almond flour + pinch of baking soda','sesame seeds (after 3 months)'
+  ];
+  const subExclusions = {
+    'flour': ['almond flour','coconut flour','self-rising flour','rice flour'],
+    'rice':  ['cauliflower rice','wild rice'],
+    'corn':  ['cauliflower corn','unicorn'],
+    'milk':  ['almond milk','coconut milk','buttermilk'],
+    'oat':   ['bloat'],
+    'sugar': ['no sugar','sugar-free','without sugar'],
+    'bread': ['flatbread','cornbread'],
+    'cocoa powder': ['unsweetened cocoa powder','cacao powder','raw cacao'],
+    'chocolate': ['unsweetened chocolate','100% chocolate','cacao nibs','dark chocolate'],
+  };
+  const sortedMap = [...SCD_ILLEGAL_MAP].sort((a,b) => b.k.length - a.k.length);
+  let cleaned = 0;
+  S.recipes.forEach(r => {
+    (r.ingredients||[]).forEach(ing => {
+      if(!(ing.alt||'').trim()) return;
+      const alt = ing.alt.toLowerCase().trim();
+      if(!suspiciousAlts.includes(alt)) return;
+      const stripped = stripQuantity((ing.name||'').toLowerCase().trim());
+      // Find the matching SCD illegal entry (most specific key first)
+      let matchedEntry = null;
+      sortedMap.some(entry => {
+        if(!stripped.includes(entry.k)) return false;
+        const excl = subExclusions[entry.k] || [];
+        const isExcluded = excl.some(ex => stripped.includes(ex));
+        if(!isExcluded) { matchedEntry = entry; return true; }
+        return false;
+      });
+      if(!matchedEntry) {
+        // Legal ingredient — clear the wrong alt
+        ing.alt = '';
+        cleaned++;
+      } else if(matchedEntry.alt && ing.alt !== matchedEntry.alt) {
+        // Illegal ingredient with wrong alt — replace with correct SCD substitute
+        ing.alt = matchedEntry.alt;
+        cleaned++;
+      }
+    });
+  });
+  if(cleaned > 0) saveState();
+}
+
+// INIT
+loadState();
+applyTheme();
+renderBrowse();
+updateApiStatusBadge();
+
+// Show import prompt if no recipes and this looks like a fresh install
+if(!S.recipes.length && !localStorage.getItem('rj_seen')) {
+  localStorage.setItem('rj_seen','1');
+  setTimeout(()=>{
+    const banner = document.getElementById('migrate-banner');
+    if(banner) banner.style.display='flex';
+  }, 500);
+}
+</script>
+</body>
+</html>
